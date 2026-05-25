@@ -2,413 +2,1004 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>OmniWallet Pro | Wallet Connect + Live Portfolio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ArcFlow Agent | Adaptive Portfolio + Cross-Market Execution</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js"></script>
   <style>
-    body { background: radial-gradient(ellipse at 20% 30%, #0a0f1e, #010409); font-family: 'Inter', sans-serif; transition: background 0.2s; }
-    body.light { background: #eef2f8; }
-    .glass-panel { background: rgba(12,20,32,0.7); backdrop-filter: blur(14px); border: 1px solid rgba(0,255,255,0.2); border-radius: 2rem; }
-    body.light .glass-panel { background: rgba(245,248,250,0.85); border-color: rgba(0,120,255,0.2); }
-    .nav-item { transition: 0.2s; cursor: pointer; border-radius: 1rem; padding: 0.85rem 1rem; margin-bottom: 0.5rem; font-weight: 600; display: flex; align-items: center; gap: 0.75rem; }
-    .nav-item.active { background: linear-gradient(135deg, #0ea5e9, #8b5cf6); color: white; box-shadow: 0 8px 18px -6px rgba(14,165,233,0.5); }
-    .module { display: none; }
-    .module.active-module { display: block; }
-    .metric-card { background: rgba(0,0,0,0.35); border-radius: 1.25rem; padding: 1rem; backdrop-filter: blur(4px); transition: transform 0.1s; }
-    .metric-card:hover { transform: translateY(-2px); background: rgba(0,0,0,0.5); }
-    .stat-value { font-size: 1.7rem; font-weight: 800; background: linear-gradient(135deg, #f0f9ff, #a5f3fc); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .spinner { border: 2px solid rgba(14,165,233,0.2); border-top: 2px solid #0ea5e9; border-radius: 50%; width: 32px; height: 32px; animation: spin 0.7s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .prob-bar { height: 6px; background: #1e293b; border-radius: 4px; overflow: hidden; }
-    .prob-fill { height: 100%; background: linear-gradient(90deg, #0ea5e9, #8b5cf6); }
-    .reputation-nft { width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto; box-shadow: 0 0 15px rgba(0,255,255,0.5); }
-    .connect-btn { background: linear-gradient(135deg, #0ea5e9, #8b5cf6); padding: 8px 18px; border-radius: 2rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
-    .connect-btn:hover { opacity: 0.9; transform: scale(1.02); }
-    .tx-table { font-size: 0.75rem; width: 100%; border-collapse: collapse; }
-    .tx-table th, .tx-table td { padding: 0.5rem; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }
-    .nft-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
-    .nft-item { background: rgba(0,0,0,0.4); border-radius: 0.75rem; padding: 0.5rem; text-align: center; width: 80px; }
-    .nft-item img { width: 60px; height: 60px; object-fit: cover; border-radius: 0.5rem; }
+    :root {
+      color-scheme: dark;
+      --cyan: #22d3ee;
+      --violet: #8b5cf6;
+      --green: #34d399;
+      --amber: #f59e0b;
+      --red: #fb7185;
+      --ink: #030712;
+      --panel: rgba(8, 13, 28, 0.72);
+      --stroke: rgba(148, 163, 184, 0.18);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 14% 12%, rgba(34, 211, 238, 0.28), transparent 27rem),
+        radial-gradient(circle at 82% 0%, rgba(139, 92, 246, 0.3), transparent 31rem),
+        radial-gradient(circle at 52% 88%, rgba(16, 185, 129, 0.14), transparent 30rem),
+        #020617;
+      color: #e5eefb;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(148, 163, 184, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(148, 163, 184, 0.05) 1px, transparent 1px);
+      background-size: 44px 44px;
+      mask-image: linear-gradient(to bottom, black, transparent 85%);
+    }
+
+    .orb {
+      position: fixed;
+      width: 24rem;
+      height: 24rem;
+      border-radius: 999px;
+      filter: blur(54px);
+      opacity: 0.32;
+      pointer-events: none;
+      animation: drift 14s ease-in-out infinite alternate;
+    }
+
+    .orb.one { background: #22d3ee; top: 8rem; left: -8rem; }
+    .orb.two { background: #8b5cf6; right: -9rem; top: 22rem; animation-delay: -5s; }
+    .orb.three { background: #10b981; left: 42%; bottom: -12rem; animation-delay: -8s; }
+
+    @keyframes drift {
+      from { transform: translate3d(0, 0, 0) scale(1); }
+      to { transform: translate3d(2rem, -1rem, 0) scale(1.08); }
+    }
+
+    .glass {
+      background: linear-gradient(145deg, rgba(15, 23, 42, 0.78), rgba(2, 6, 23, 0.62));
+      border: 1px solid var(--stroke);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(22px);
+      border-radius: 28px;
+    }
+
+    .glass-soft {
+      background: rgba(15, 23, 42, 0.48);
+      border: 1px solid rgba(148, 163, 184, 0.14);
+      border-radius: 22px;
+    }
+
+    .shine {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .shine::after {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      background: linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.14) 35%, transparent 65%);
+      transform: translateX(-120%);
+      animation: shine 6s ease-in-out infinite;
+    }
+
+    @keyframes shine {
+      0%, 55% { transform: translateX(-120%); }
+      80%, 100% { transform: translateX(120%); }
+    }
+
+    .gradient-text {
+      background: linear-gradient(90deg, #67e8f9, #c4b5fd 45%, #86efac);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: rgba(15, 23, 42, 0.62);
+      border-radius: 999px;
+      padding: 0.42rem 0.76rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #cbd5e1;
+    }
+
+    .status-dot {
+      width: 0.55rem;
+      height: 0.55rem;
+      border-radius: 999px;
+      background: #94a3b8;
+      box-shadow: 0 0 0 4px rgba(148, 163, 184, 0.12);
+    }
+
+    .status-dot.good { background: var(--green); box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.16); }
+    .status-dot.warn { background: var(--amber); box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.16); }
+    .status-dot.bad { background: var(--red); box-shadow: 0 0 0 4px rgba(251, 113, 133, 0.16); }
+
+    .metric {
+      background: radial-gradient(circle at top right, rgba(34, 211, 238, 0.16), transparent 40%), rgba(15, 23, 42, 0.62);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      border-radius: 24px;
+      padding: 1.1rem;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.55rem;
+      border-radius: 999px;
+      padding: 0.82rem 1.15rem;
+      font-weight: 800;
+      transition: transform 160ms ease, opacity 160ms ease, box-shadow 160ms ease;
+    }
+
+    .btn-primary {
+      color: #04111d;
+      background: linear-gradient(135deg, #67e8f9, #a78bfa 52%, #86efac);
+      box-shadow: 0 18px 44px rgba(34, 211, 238, 0.22);
+    }
+
+    .btn-secondary {
+      color: #e2e8f0;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    .btn-primary:hover,
+    .btn-secondary:hover { transform: translateY(-1px); opacity: 0.94; }
+
+    .input,
+    .select {
+      width: 100%;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: rgba(2, 6, 23, 0.52);
+      color: #e2e8f0;
+      border-radius: 18px;
+      padding: 0.82rem 0.95rem;
+      outline: none;
+    }
+
+    .select option { background: #0f172a; }
+
+    .slider {
+      width: 100%;
+      accent-color: var(--cyan);
+    }
+
+    .table-row {
+      display: grid;
+      grid-template-columns: 0.8fr 1fr 1fr 1fr;
+      gap: 0.75rem;
+      align-items: center;
+      padding: 0.82rem 0;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    }
+
+    .route-row {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 1fr 0.8fr;
+      gap: 0.75rem;
+      align-items: center;
+      padding: 0.9rem;
+      border-radius: 18px;
+      background: rgba(15, 23, 42, 0.52);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+    }
+
+    .bar {
+      height: 0.5rem;
+      border-radius: 999px;
+      background: rgba(30, 41, 59, 0.95);
+      overflow: hidden;
+    }
+
+    .bar > span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #22d3ee, #8b5cf6, #34d399);
+    }
+
+    .terminal {
+      min-height: 14rem;
+      max-height: 20rem;
+      overflow: auto;
+      border-radius: 22px;
+      border: 1px solid rgba(52, 211, 153, 0.18);
+      background: rgba(1, 10, 18, 0.84);
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      font-size: 0.78rem;
+      color: #bbf7d0;
+    }
+
+    .terminal-line {
+      display: flex;
+      gap: 0.6rem;
+      padding: 0.34rem 0;
+      border-bottom: 1px solid rgba(34, 197, 94, 0.05);
+    }
+
+    .terminal-time { color: #67e8f9; white-space: nowrap; }
+
+    .timeline-step {
+      display: grid;
+      grid-template-columns: 2.4rem 1fr;
+      gap: 0.8rem;
+      position: relative;
+    }
+
+    .timeline-step:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      left: 1.18rem;
+      top: 2.7rem;
+      bottom: -0.75rem;
+      width: 1px;
+      background: linear-gradient(#22d3ee, rgba(34, 211, 238, 0));
+    }
+
+    .step-index {
+      width: 2.4rem;
+      height: 2.4rem;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, rgba(34, 211, 238, 0.24), rgba(139, 92, 246, 0.24));
+      border: 1px solid rgba(103, 232, 249, 0.28);
+      color: #a5f3fc;
+      font-weight: 900;
+    }
+
+    @media (max-width: 720px) {
+      .table-row,
+      .route-row {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
-<body class="text-gray-200 antialiased p-4 md:p-6">
+<body>
+  <div class="orb one"></div>
+  <div class="orb two"></div>
+  <div class="orb three"></div>
 
-<div class="max-w-7xl mx-auto">
-  <!-- Header -->
-  <div class="flex flex-wrap justify-between items-center gap-4 mb-8">
-    <div class="flex items-center gap-3">
-      <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-400 to-indigo-600 flex items-center justify-center shadow-lg"><i class="fas fa-brain text-white text-2xl"></i></div>
-      <div>
-        <h1 class="text-3xl font-extrabold bg-gradient-to-r from-cyan-300 via-blue-400 to-purple-400 bg-clip-text text-transparent">OmniWallet<span class="text-white"> Pro</span></h1>
-        <p class="text-slate-400 text-xs">Wallet Connect | Covalent + Zerion | Live Portfolio</p>
-      </div>
-    </div>
-    <div class="flex gap-3 items-center">
-      <button id="walletConnectBtn" class="connect-btn"><i class="fas fa-plug mr-1"></i> Connect Wallet</button>
-      <button id="darkToggle" class="bg-slate-800/60 backdrop-blur p-2 rounded-2xl w-10 h-10"><i class="fas fa-moon"></i></button>
-      <button id="exportBtn" class="bg-gradient-to-r from-indigo-600 to-purple-600 px-5 py-2 rounded-2xl text-sm font-bold shadow-md"><i class="fas fa-download"></i> Report</button>
-    </div>
-  </div>
-
-  <!-- Search Bar -->
-  <div class="glass-panel p-5 mb-8 border-cyan-500/30">
-    <div class="flex flex-col md:flex-row gap-3">
-      <div class="relative flex-1">
-        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-cyan-400"></i>
-        <input type="text" id="walletInput" placeholder="Wallet address (0x...)" class="w-full bg-black/40 border border-cyan-800/50 rounded-2xl py-3 pl-11 pr-4 text-white">
-      </div>
-      <select id="chainSelect" class="bg-black/40 border border-cyan-800/50 rounded-2xl px-4 py-2">
-        <option value="ethereum">Ethereum</option><option value="bsc">BSC</option><option value="polygon">Polygon</option><option value="arbitrum">Arbitrum</option>
-      </select>
-      <button id="analyzeBtn" class="bg-cyan-600 hover:bg-cyan-500 px-6 py-2 rounded-2xl font-bold shadow-md"><i class="fas fa-chart-line"></i> Analyze</button>
-      <button id="copyBtn" class="bg-slate-700/70 px-4 rounded-2xl"><i class="fas fa-copy"></i></button>
-    </div>
-    <p class="text-xs text-slate-400 mt-3">✅ Connect your wallet (MetaMask) → portfolio loads automatically. API keys are stored securely in Vercel environment variables.</p>
-  </div>
-
-  <!-- Sidebar + Modules -->
-  <div class="flex flex-col lg:flex-row gap-6">
-    <div class="lg:w-72 glass-panel p-3 h-fit sticky top-6">
-      <div class="nav-item active" data-tab="portfolio"><i class="fas fa-chart-pie w-5"></i> Portfolio</div>
-      <div class="nav-item" data-tab="scam"><i class="fas fa-shield-halos w-5"></i> Scam Token</div>
-      <div class="nav-item" data-tab="strategy"><i class="fas fa-chart-line w-5"></i> Trading Strategy</div>
-      <div class="nav-item" data-tab="yield"><i class="fas fa-water w-5"></i> Yield Optimizer</div>
-      <div class="nav-item" data-tab="identity"><i class="fas fa-id-card w-5"></i> Social Identity</div>
-      <div class="nav-item" data-tab="agents"><i class="fas fa-robot w-5"></i> AI Trading Agents</div>
-      <div class="nav-item" data-tab="prediction"><i class="fas fa-chart-gantt w-5"></i> Prediction Markets</div>
-      <div class="nav-item" data-tab="cross"><i class="fas fa-exchange-alt w-5"></i> Cross‑Chain Exec</div>
-      <div class="nav-item" data-tab="macro"><i class="fas fa-globe-americas w-5"></i> Macro & Geo</div>
-      <div class="nav-item" data-tab="social"><i class="fas fa-users w-5"></i> Social Trading</div>
-    </div>
-
-    <div class="flex-1 space-y-5">
-      <div id="portfolioTab" class="module active-module"><div class="glass-panel p-6"><div class="spinner mx-auto"></div><p class="text-center">Loading portfolio from Covalent + Zerion...</p></div></div>
-      <div id="scamTab" class="module"><div class="glass-panel p-6"><div class="spinner mx-auto"></div></div></div>
-      <div id="strategyTab" class="module"><div class="glass-panel p-6"><div class="spinner mx-auto"></div></div></div>
-      <div id="yieldTab" class="module"><div class="glass-panel p-6"><div class="spinner mx-auto"></div></div></div>
-      <div id="identityTab" class="module"><div class="glass-panel p-6"><div class="spinner mx-auto"></div></div></div>
-      <div id="agentsTab" class="module"><div class="glass-panel p-6"><div class="spinner mx-auto"></div></div></div>
-      <div id="predictionTab" class="module"><div class="glass-panel p-6"><div class="spinner mx-auto"></div></div></div>
-      <div id="crossTab" class="module"><div class="glass-panel p-6"><div class="spinner mx-auto"></div></div></div>
-      <div id="macroTab" class="module"><div class="glass-panel p-6"><div class="spinner mx-auto"></div></div></div>
-      <div id="socialTab" class="module"><div class="glass-panel p-6"><div class="spinner mx-auto"></div></div></div>
-    </div>
-  </div>
-</div>
-
-<script>
-  // ------------------- GLOBALS -------------------
-  let currentWallet = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045";
-  let currentChain = "ethereum";
-  let apiKeys = { covalent: "", zerion: "" };
-  let charts = {};
-
-  function getChainId(chain) { const map = { ethereum:1, bsc:56, polygon:137, arbitrum:42161 }; return map[chain] || 1; }
-
-  // Fetch keys from Vercel backend
-  async function fetchKeysFromBackend() {
-    try {
-      const res = await fetch('/api/config');
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      apiKeys.covalent = data.covalent;
-      apiKeys.zerion = data.zerion;
-      if (!apiKeys.covalent || !apiKeys.zerion) console.warn("⚠️ API keys missing in Vercel env");
-      else console.log("✅ API keys loaded from backend");
-    } catch (err) {
-      console.error("❌ Failed to load API keys:", err);
-      apiKeys.covalent = "";
-      apiKeys.zerion = "";
-    }
-  }
-
-  // ---------- PORTFOLIO (Covalent) ----------
-  async function getPortfolioFromCovalent(address, chainName) {
-    if(!apiKeys.covalent) return { error: "Covalent API key missing" };
-    const chainId = getChainId(chainName);
-    const balancesUrl = `https://api.covalenthq.com/v1/${chainId}/address/${address}/balances_v2/?key=${apiKeys.covalent}`;
-    const txsUrl = `https://api.covalenthq.com/v1/${chainId}/address/${address}/transactions_v2/?key=${apiKeys.covalent}&pageSize=10`;
-    const nftUrl = `https://api.covalenthq.com/v1/${chainId}/address/${address}/nft_metadata/?key=${apiKeys.covalent}`;
-    try {
-      const [balancesRes, txsRes, nftRes] = await Promise.all([fetch(balancesUrl), fetch(txsUrl), fetch(nftUrl)]);
-      const balancesData = await balancesRes.json();
-      const txsData = await txsRes.json();
-      const nftData = await nftRes.json();
-      let tokens = [];
-      if(balancesData.data && balancesData.data.items) {
-        tokens = balancesData.data.items.filter(i => parseFloat(i.balance) > 0).map(i => ({
-          symbol: i.contract_ticker_symbol,
-          balance: (i.balance / Math.pow(10, i.contract_decimals)).toFixed(4),
-          value: i.quote ? i.quote.toFixed(2) : null
-        }));
-      }
-      let transactions = [];
-      if(txsData.data && txsData.data.items) {
-        transactions = txsData.data.items.slice(0,10).map(tx => ({
-          hash: tx.tx_hash,
-          value: tx.value ? (tx.value / 1e18).toFixed(4) : "0",
-          timestamp: new Date(tx.block_signed_at).toLocaleString()
-        }));
-      }
-      let nfts = [];
-      if(nftData.data && nftData.data.items) {
-        nfts = nftData.data.items.slice(0,6).map(n => ({
-          name: n.nft_data?.[0]?.token_name || n.contract_name || "NFT",
-          image: n.nft_data?.[0]?.external_data?.image || "https://placehold.co/60"
-        }));
-      }
-      return { tokens, transactions, nfts };
-    } catch(e) { return { error: e.message }; }
-  }
-
-  async function getPortfolioFromZerion(address, chainName) {
-    if(!apiKeys.zerion) return { error: "Zerion API key missing" };
-    const chainParam = chainName === "ethereum" ? "eth" : chainName;
-    const url = `https://api.zerion.io/v1/wallets/${address}/positions/?currency=usd&filter[chain_ids]=${chainParam}`;
-    try {
-      const res = await fetch(url, { headers: { "Authorization": `Bearer ${apiKeys.zerion}` } });
-      if(!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      let tokens = [];
-      if(data.data && data.data.length) {
-        tokens = data.data.map(pos => ({
-          symbol: pos.attributes?.fungible_info?.symbol || "Unknown",
-          balance: pos.attributes?.quantity?.native || 0,
-          value: pos.attributes?.value || 0
-        })).filter(t => parseFloat(t.balance) > 0);
-      }
-      return { tokens, transactions: [], nfts: [] };
-    } catch(e) { return { error: e.message }; }
-  }
-
-  async function getCombinedPortfolio(address, chainName) {
-    const covalent = await getPortfolioFromCovalent(address, chainName);
-    const zerion = await getPortfolioFromZerion(address, chainName);
-    let mergedTokens = [];
-    if(covalent.tokens && covalent.tokens.length) mergedTokens = covalent.tokens;
-    else if(zerion.tokens && zerion.tokens.length) mergedTokens = zerion.tokens;
-    return { tokens: mergedTokens, transactions: covalent.transactions || [], nfts: covalent.nfts || [], covalentError: covalent.error, zerionError: zerion.error };
-  }
-
-  // ---------- OTHER MODULES (public APIs) ----------
-  async function getTokenScamData(tokenAddr, chainName) {
-    const chainId = getChainId(chainName);
-    const url = `https://api.gopluslabs.io/api/v1/token_security/${chainId}?contract_addresses=${tokenAddr}`;
-    try {
-      const res = await fetch(url);
-      const data = await res.json();
-      if (data.code===1 && data.result && data.result[tokenAddr.toLowerCase()]) {
-        const info = data.result[tokenAddr.toLowerCase()];
-        let risk=0, flags=[];
-        if (info.is_honeypot==="1") risk+=40;
-        if (info.sell_tax && parseFloat(info.sell_tax)>10) risk+=20;
-        if (info.buy_tax && parseFloat(info.buy_tax)>10) risk+=10;
-        if (info.trading_cooldown==="1") risk+=15;
-        if (info.owner_balance && parseFloat(info.owner_balance)>0) risk+=10;
-        if (info.lp_holder?.length && !info.lp_holder.some(lp=>lp.locked==="1")) risk+=15;
-        if (info.is_honeypot==="1") flags.push("🍯 Honeypot");
-        if (info.sell_tax && parseFloat(info.sell_tax)>10) flags.push(`💰 Sell tax ${info.sell_tax}%`);
-        if (info.buy_tax && parseFloat(info.buy_tax)>10) flags.push(`💸 Buy tax ${info.buy_tax}%`);
-        if (info.trading_cooldown==="1") flags.push("⏱️ Cooldown");
-        if (info.owner_balance && parseFloat(info.owner_balance)>0) flags.push("👑 Owner holds");
-        if (info.lp_holder?.length && !info.lp_holder.some(lp=>lp.locked==="1")) flags.push("⚠️ Liquidity unlocked");
-        if (flags.length===0) flags.push("✅ No scam indicators");
-        risk = Math.min(100, risk);
-        return { risk, flags };
-      } else throw new Error();
-    } catch(e) { return { error: e.message }; }
-  }
-
-  async function getTokenMarketData(tokenAddr) {
-    try {
-      const url = `https://api.dexscreener.com/latest/dex/search?q=${tokenAddr}`;
-      const res = await fetch(url);
-      const data = await res.json();
-      if (data.pairs && data.pairs.length>0) {
-        const pair = data.pairs[0];
-        return { price: parseFloat(pair.priceUsd).toFixed(4), liquidity: pair.liquidity?.usd ? `$${parseFloat(pair.liquidity.usd).toLocaleString()}` : "N/A", volume24h: pair.volume?.h24 ? `$${parseFloat(pair.volume.h24).toLocaleString()}` : "N/A" };
-      } else throw new Error();
-    } catch(e) { return { error: "No market data" }; }
-  }
-
-  async function fetchRealYield(asset="USDC", chain="ethereum") {
-    try {
-      const res = await fetch("https://yields.llama.fi/pools");
-      const data = await res.json();
-      let filtered = data.data.filter(p => p.chain.toLowerCase()===chain.toLowerCase() && p.symbol.toUpperCase().includes(asset.toUpperCase()) && p.apy<50 && p.tvlUsd>100000);
-      filtered = filtered.sort((a,b)=>b.apy - a.apy).slice(0,5);
-      if(filtered.length) return filtered.map(p=>({ protocol:p.project, pool:p.symbol, apy:p.apy }));
-      throw new Error();
-    } catch(e) { return { error: e.message }; }
-  }
-
-  async function getRealPredictionEvents() {
-    try {
-      const proxy = "https://api.allorigins.win/raw?url=";
-      const url = "https://gamma-api.polymarket.com/events?limit=5";
-      const res = await fetch(proxy+encodeURIComponent(url));
-      const data = await res.json();
-      if(data && data.length) return data.slice(0,3).map(e => ({ name: e.title || e.question, prob: (e.outcomePrices?.[0] || 0.5)*100 }));
-      throw new Error();
-    } catch(e) { return { error: "Failed to fetch" }; }
-  }
-
-  async function getRealFearGreed() {
-    try { const res = await fetch("https://api.alternative.me/fng/"); const data = await res.json(); if(data.data && data.data[0]) return { fng: parseInt(data.data[0].value), classification: data.data[0].value_classification }; throw new Error(); } catch(e) { return { error: "Fear & Greed unavailable" }; }
-  }
-
-  async function getCoinGeckoPriceChanges() {
-    const coins = ["ethereum", "bitcoin", "solana", "matic-network", "dogecoin", "avalanche-2", "chainlink"];
-    const ids = coins.join(",");
-    try {
-      const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`);
-      const data = await res.json();
-      const mapping = { ethereum:"ETH", bitcoin:"BTC", solana:"SOL", "matic-network":"MATIC", dogecoin:"DOGE", "avalanche-2":"AVAX", chainlink:"LINK" };
-      return coins.map(id => {
-        const change = data[id]?.usd_24h_change ?? 0;
-        const signal = change > 5 ? "BUY" : (change < -5 ? "SELL" : "HOLD");
-        return { token: mapping[id], change: change.toFixed(1), signal };
-      });
-    } catch(e) { return { error: "CoinGecko failed" }; }
-  }
-
-  async function getIdentity(addr) {
-    try {
-      let provider = new ethers.providers.JsonRpcProvider("https://cloudflare-eth.com");
-      let ens = await provider.lookupAddress(addr);
-      return { ens: ens || "No ENS" };
-    } catch(e) { return { error: "ENS failed" }; }
-  }
-
-  async function getReputationScore(addr, chainName) {
-    const scam = await getTokenScamData(addr, chainName);
-    if(scam.error) return { score: 0, grade: "N/A" };
-    let score = Math.max(0, 100 - scam.risk);
-    let grade = score>=80?"Gold":score>=50?"Silver":"Bronze";
-    return { score, grade };
-  }
-
-  // ---------- RENDER ALL MODULES ----------
-  async function refreshAll() {
-    const addr = currentWallet;
-    const chain = currentChain;
-
-    // Portfolio
-    const portfolioDiv = document.getElementById("portfolioTab");
-    portfolioDiv.innerHTML = `<div class="glass-panel p-6"><div class="spinner mx-auto"></div><p class="text-center">Fetching portfolio...</p></div>`;
-    const portfolio = await getCombinedPortfolio(addr, chain);
-    if(portfolio.error || (!portfolio.tokens.length && !portfolio.transactions.length && !portfolio.nfts.length)) {
-      portfolioDiv.innerHTML = `<div class="glass-panel p-6 text-red-400">❌ Failed to load portfolio. Check API keys. Covalent: ${portfolio.covalentError || "ok"} | Zerion: ${portfolio.zerionError || "ok"}</div>`;
-    } else {
-      portfolioDiv.innerHTML = `<div class="glass-panel p-6">
-        <h2 class="text-2xl font-bold"><i class="fas fa-chart-pie text-emerald-400 mr-2"></i>Portfolio (Covalent + Zerion)</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-          <div class="metric-card"><p class="text-sm font-semibold">Token Balances</p>${portfolio.tokens.map(t => `<div class="flex justify-between text-sm"><span>${t.symbol}</span><span>${t.balance} ${t.value ? `($${t.value})` : ''}</span></div>`).join('') || '<div class="text-xs">No tokens found</div>'}</div>
-          <div class="metric-card"><p class="text-sm font-semibold">Recent Transactions</p><table class="tx-table">${portfolio.transactions.map(tx => `<tr><td class="font-mono text-xs">${tx.hash.slice(0,10)}...</td><td>${tx.value} ETH</td><td class="text-xs">${tx.timestamp}</td></tr>`).join('') || '<tr><td colspan="3">No recent transactions</td></tr>'}<\/table></div>
-          <div class="metric-card col-span-2"><p class="text-sm font-semibold">NFT Holdings</p><div class="nft-grid">${portfolio.nfts.map(n => `<div class="nft-item"><img src="${n.image}" onerror="this.src='https://placehold.co/60'"><div class="text-xs mt-1 truncate">${n.name.slice(0,12)}</div></div>`).join('') || '<div class="text-xs">No NFTs found</div>'}</div></div>
+  <main class="relative mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+    <header class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div class="flex items-center gap-4">
+        <div class="shine grid h-14 w-14 place-items-center rounded-3xl bg-gradient-to-br from-cyan-300 via-violet-400 to-emerald-300 shadow-2xl shadow-cyan-500/20">
+          <i class="fa-solid fa-satellite-dish text-2xl text-slate-950"></i>
         </div>
-      </div>`;
+        <div>
+          <div class="flex flex-wrap items-center gap-2">
+            <h1 class="text-2xl font-black tracking-tight sm:text-3xl">ArcFlow <span class="gradient-text">Agent</span></h1>
+            <span class="pill"><i class="fa-solid fa-trophy text-amber-300"></i> Agora Agent Hackathon</span>
+          </div>
+          <p class="mt-1 max-w-2xl text-sm text-slate-400">Adaptive portfolio manager and cross-market execution copilot with Circle-native USDC settlement rails.</p>
+        </div>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <span id="circleStatusPill" class="pill"><span class="status-dot warn"></span> Checking Circle API</span>
+        <span class="pill"><i class="fa-brands fa-ethereum text-cyan-300"></i> ETH / Base / Solana</span>
+        <span class="pill"><i class="fa-solid fa-shield-halved text-emerald-300"></i> Non-custodial sim</span>
+      </div>
+    </header>
+
+    <section class="glass mb-6 overflow-hidden p-5 sm:p-7">
+      <div class="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+        <div>
+          <div class="mb-4 flex flex-wrap gap-2">
+            <span class="pill"><i class="fa-solid fa-brain text-cyan-300"></i> Volatility aware</span>
+            <span class="pill"><i class="fa-solid fa-route text-violet-300"></i> Cross-market routing</span>
+            <span class="pill"><i class="fa-solid fa-circle-dollar-to-slot text-emerald-300"></i> Circle CCTP ready</span>
+          </div>
+          <h2 class="max-w-4xl text-4xl font-black leading-tight tracking-tight sm:text-6xl">
+            A market-participant agent for <span class="gradient-text">allocation, execution, and USDC settlement.</span>
+          </h2>
+          <p class="mt-5 max-w-3xl text-base leading-7 text-slate-300">
+            ArcFlow watches momentum, volatility, liquidity depth, stablecoin buffers, and chain conditions. It proposes adaptive target weights, generates rebalance orders, and simulates best execution across DEXs, CEX liquidity, and Circle-powered settlement paths.
+          </p>
+          <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+            <button id="rebalanceBtn" class="btn-primary"><i class="fa-solid fa-wand-magic-sparkles"></i> Generate Adaptive Rebalance</button>
+            <button id="executeBtn" class="btn-secondary"><i class="fa-solid fa-bolt"></i> Simulate Cross-Market Execution</button>
+          </div>
+        </div>
+        <div class="glass-soft p-4">
+          <div class="mb-4 flex items-center justify-between">
+            <div>
+              <p class="text-xs font-bold uppercase tracking-[0.28em] text-cyan-200/80">Agent Allocation</p>
+              <h3 class="text-xl font-black">Target vs current portfolio</h3>
+            </div>
+            <span id="agentModeBadge" class="pill">Balanced</span>
+          </div>
+          <div class="mx-auto max-w-md">
+            <canvas id="allocationChart" height="280" aria-label="Portfolio allocation chart"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div class="metric">
+        <p class="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">Portfolio Value</p>
+        <div id="aumMetric" class="mt-2 text-3xl font-black">$128,430</div>
+        <p class="mt-2 text-sm text-emerald-300"><i class="fa-solid fa-arrow-trend-up"></i> +3.8% model-adjusted 24h</p>
+      </div>
+      <div class="metric">
+        <p class="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">Risk Budget</p>
+        <div id="riskMetric" class="mt-2 text-3xl font-black">52/100</div>
+        <p class="mt-2 text-sm text-slate-400">Volatility, drawdown, and stable buffer blended.</p>
+      </div>
+      <div class="metric">
+        <p class="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">Rebalance Drift</p>
+        <div id="driftMetric" class="mt-2 text-3xl font-black">8.4%</div>
+        <p class="mt-2 text-sm text-amber-300"><i class="fa-solid fa-triangle-exclamation"></i> Above execution threshold</p>
+      </div>
+      <div class="metric">
+        <p class="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">Settlement Rail</p>
+        <div class="mt-2 text-3xl font-black">USDC</div>
+        <p class="mt-2 text-sm text-cyan-300">Circle Wallets, CCTP, and nanopayments.</p>
+      </div>
+    </section>
+
+    <section class="mb-6 grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+      <div class="glass p-5 sm:p-6">
+        <div class="mb-5 flex items-start justify-between gap-4">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-[0.25em] text-cyan-200/80">Control Surface</p>
+            <h3 class="text-2xl font-black">Agent constraints</h3>
+          </div>
+          <button id="scanMarketsBtn" class="btn-secondary !px-4 !py-2 text-sm"><i class="fa-solid fa-satellite-dish"></i> Refresh market data</button>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2">
+          <label class="block">
+            <span class="mb-2 block text-sm font-bold text-slate-300">Risk posture</span>
+            <select id="riskSelect" class="select">
+              <option value="conservative">Capital preservation</option>
+              <option value="balanced" selected>Balanced compounding</option>
+              <option value="aggressive">Aggressive growth</option>
+            </select>
+          </label>
+          <label class="block">
+            <span class="mb-2 block text-sm font-bold text-slate-300">Execution chain</span>
+            <select id="chainSelect" class="select">
+              <option value="Base">Base</option>
+              <option value="Ethereum">Ethereum</option>
+              <option value="Solana">Solana</option>
+              <option value="Arbitrum">Arbitrum</option>
+            </select>
+          </label>
+          <label class="block">
+            <span class="mb-2 block text-sm font-bold text-slate-300">Wallet address</span>
+            <input id="walletInput" class="input" value="0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" aria-label="Wallet address">
+          </label>
+          <label class="block">
+            <span class="mb-2 block text-sm font-bold text-slate-300">Target asset</span>
+            <select id="targetAsset" class="select">
+              <option value="ETH">ETH</option>
+              <option value="BTC">BTC</option>
+              <option value="SOL">SOL</option>
+              <option value="LINK">LINK</option>
+            </select>
+          </label>
+          <label class="block sm:col-span-2">
+            <span class="mb-2 flex justify-between text-sm font-bold text-slate-300">
+              <span>Minimum stablecoin buffer</span>
+              <span><span id="stableBufferLabel">25</span>% USDC</span>
+            </span>
+            <input id="stableBuffer" type="range" min="8" max="55" value="25" class="slider">
+          </label>
+          <label class="block sm:col-span-2">
+            <span class="mb-2 flex justify-between text-sm font-bold text-slate-300">
+              <span>Max per-trade slippage</span>
+              <span><span id="slippageLabel">0.65</span>%</span>
+            </span>
+            <input id="slippageRange" type="range" min="0.1" max="2" step="0.05" value="0.65" class="slider">
+          </label>
+          <div class="sm:col-span-2 flex flex-col gap-3 rounded-3xl border border-cyan-300/10 bg-cyan-300/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h4 class="font-black">Live data mode</h4>
+              <p id="dataSourceStatus" class="text-sm text-slate-400">Loads Zerion + GoldRush portfolio data through backend API routes.</p>
+            </div>
+            <button id="loadPortfolioBtn" class="btn-primary !px-4 !py-2 text-sm"><i class="fa-solid fa-wallet"></i> Load live portfolio</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass p-5 sm:p-6">
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-[0.25em] text-violet-200/80">Adaptive Portfolio</p>
+            <h3 class="text-2xl font-black">Rebalance intent</h3>
+          </div>
+          <span id="rebalanceConfidence" class="pill"><i class="fa-solid fa-star text-cyan-300"></i> 91% confidence</span>
+        </div>
+        <div class="table-row text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
+          <span>Asset</span>
+          <span>Current</span>
+          <span>Target</span>
+          <span>Action</span>
+        </div>
+        <div id="allocationRows"></div>
+      </div>
+    </section>
+
+    <section class="mb-6 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+      <div class="glass p-5 sm:p-6">
+        <div class="mb-5 flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-[0.25em] text-emerald-200/80">Cross-Market Execution</p>
+            <h3 class="text-2xl font-black">Best-route simulator</h3>
+            <p class="mt-1 text-sm text-slate-400">Compares destination liquidity, fees, slippage, bridge latency, and Circle settlement readiness.</p>
+          </div>
+          <div class="flex gap-2">
+            <button id="routeBtn" class="btn-primary !px-4 !py-2 text-sm"><i class="fa-solid fa-route"></i> Rank routes</button>
+          </div>
+        </div>
+
+        <div class="mb-4 grid gap-4 md:grid-cols-4">
+          <label>
+            <span class="mb-2 block text-xs font-bold uppercase tracking-[0.18em] text-slate-500">From</span>
+            <select id="sourceMarket" class="select">
+              <option>Ethereum</option>
+              <option selected>Base</option>
+              <option>Arbitrum</option>
+              <option>Solana</option>
+            </select>
+          </label>
+          <label>
+            <span class="mb-2 block text-xs font-bold uppercase tracking-[0.18em] text-slate-500">To</span>
+            <select id="destMarket" class="select">
+              <option selected>Arc</option>
+              <option>Ethereum</option>
+              <option>Base</option>
+              <option>Arbitrum</option>
+              <option>Solana</option>
+            </select>
+          </label>
+          <label>
+            <span class="mb-2 block text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Notional</span>
+            <input id="orderAmount" class="input" type="number" min="100" value="12500">
+          </label>
+          <label>
+            <span class="mb-2 block text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Settle</span>
+            <select id="settlementAsset" class="select">
+              <option selected>USDC</option>
+              <option>EURC</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="mb-3 route-row text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
+          <span>Venue / route</span>
+          <span>Net price</span>
+          <span>Cost</span>
+          <span>Primitive</span>
+        </div>
+        <div id="routeRows" class="space-y-3"></div>
+      </div>
+
+      <div class="glass p-5 sm:p-6">
+        <div class="mb-5">
+          <p class="text-xs font-bold uppercase tracking-[0.25em] text-cyan-200/80">Circle Infrastructure</p>
+          <h3 class="text-2xl font-black">Stablecoin-native settlement</h3>
+          <p id="circleMessage" class="mt-2 text-sm leading-6 text-slate-400">Circle API status is loading.</p>
+        </div>
+        <div class="space-y-4">
+          <div class="timeline-step">
+            <div class="step-index">1</div>
+            <div class="glass-soft p-3">
+              <h4 class="font-extrabold">Wallet funding check</h4>
+              <p class="text-sm text-slate-400">Server verifies Circle API connectivity and available account configuration.</p>
+            </div>
+          </div>
+          <div class="timeline-step">
+            <div class="step-index">2</div>
+            <div class="glass-soft p-3">
+              <h4 class="font-extrabold">CCTP transfer plan</h4>
+              <p class="text-sm text-slate-400">Burn native USDC on source chain and mint native USDC on destination chain.</p>
+            </div>
+          </div>
+          <div class="timeline-step">
+            <div class="step-index">3</div>
+            <div class="glass-soft p-3">
+              <h4 class="font-extrabold">Venue execution</h4>
+              <p class="text-sm text-slate-400">Split order by liquidity score, expected slippage, and settlement finality.</p>
+            </div>
+          </div>
+          <div class="timeline-step">
+            <div class="step-index">4</div>
+            <div class="glass-soft p-3">
+              <h4 class="font-extrabold">Nanopayment telemetry</h4>
+              <p class="text-sm text-slate-400">Pay agents, data sources, and strategy modules in stablecoin-native microflows.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
+      <div class="glass p-5 sm:p-6">
+        <div class="mb-5">
+          <p class="text-xs font-bold uppercase tracking-[0.25em] text-amber-200/80">Market Intelligence</p>
+          <h3 class="text-2xl font-black">Signals the agent reads</h3>
+        </div>
+        <div id="signalCards" class="space-y-3"></div>
+      </div>
+
+      <div class="glass p-5 sm:p-6">
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-[0.25em] text-emerald-200/80">Agent Trace</p>
+            <h3 class="text-2xl font-black">Decision log</h3>
+          </div>
+          <button id="clearLogBtn" class="btn-secondary !px-4 !py-2 text-sm"><i class="fa-solid fa-eraser"></i> Clear</button>
+        </div>
+        <div id="agentLog" class="terminal p-4" aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    let portfolioValue = 128430;
+    const assets = [
+      { symbol: "BTC", name: "Bitcoin", current: 26, base: { conservative: 28, balanced: 28, aggressive: 26 }, price: 68200, change: 2.6, volatility: 38, liquidity: 96, color: "#f59e0b" },
+      { symbol: "ETH", name: "Ethereum", current: 30, base: { conservative: 22, balanced: 27, aggressive: 29 }, price: 3740, change: 4.1, volatility: 46, liquidity: 94, color: "#67e8f9" },
+      { symbol: "SOL", name: "Solana", current: 14, base: { conservative: 5, balanced: 12, aggressive: 23 }, price: 164, change: 7.4, volatility: 72, liquidity: 82, color: "#a78bfa" },
+      { symbol: "LINK", name: "Chainlink", current: 6, base: { conservative: 5, balanced: 8, aggressive: 10 }, price: 17.8, change: 1.2, volatility: 58, liquidity: 74, color: "#60a5fa" },
+      { symbol: "USDC", name: "Circle USDC", current: 24, base: { conservative: 40, balanced: 25, aggressive: 12 }, price: 1, change: 0, volatility: 2, liquidity: 99, color: "#34d399" },
+      { symbol: "OTHER", name: "Other assets", current: 0, base: { conservative: 0, balanced: 0, aggressive: 0 }, price: 1, change: 0, volatility: 52, liquidity: 50, color: "#94a3b8" }
+    ];
+
+    const signals = [
+      { title: "Liquidity depth", value: "High", detail: "ETH/Base route has tight spreads and strong stablecoin liquidity.", tone: "text-emerald-300", icon: "fa-water" },
+      { title: "Volatility regime", value: "Elevated", detail: "SOL momentum is strong, but position size is capped by drawdown budget.", tone: "text-amber-300", icon: "fa-chart-line" },
+      { title: "Stablecoin rail", value: "Circle-first", detail: "USDC is used as routing collateral, CCTP bridge asset, and settlement unit.", tone: "text-cyan-300", icon: "fa-circle-dollar-to-slot" },
+      { title: "Macro guardrail", value: "Risk-on", detail: "Model allows incremental beta while preserving the minimum stable buffer.", tone: "text-violet-300", icon: "fa-globe" }
+    ];
+
+    const venues = [
+      { name: "Uniswap v3", chain: "Ethereum", fee: 0.08, latency: 2.1, depth: 94, icon: "fa-layer-group" },
+      { name: "Aerodrome", chain: "Base", fee: 0.05, latency: 0.8, depth: 86, icon: "fa-plane-departure" },
+      { name: "Curve", chain: "Arbitrum", fee: 0.04, latency: 1.2, depth: 89, icon: "fa-wave-square" },
+      { name: "Jupiter", chain: "Solana", fee: 0.06, latency: 0.5, depth: 81, icon: "fa-bolt" },
+      { name: "CEX RFQ", chain: "Off-chain", fee: 0.12, latency: 1.7, depth: 98, icon: "fa-building-columns" }
+    ];
+
+    let allocationChart;
+    let circleState = { configured: false, connected: false, environment: "sandbox" };
+
+    const formatUsd = (value) => value.toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+    const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+    const chainApiName = (chain) => String(chain || "ethereum").toLowerCase().replace(" ", "-");
+
+    function log(message, tone = "info") {
+      const logEl = document.getElementById("agentLog");
+      const line = document.createElement("div");
+      line.className = "terminal-line";
+      const color = tone === "good" ? "text-emerald-300" : tone === "warn" ? "text-amber-300" : tone === "bad" ? "text-rose-300" : "text-slate-200";
+      line.innerHTML = `<span class="terminal-time">${new Date().toLocaleTimeString()}</span><span class="${color}">${message}</span>`;
+      logEl.prepend(line);
     }
 
-    // Scam Token
-    const scam = await getTokenScamData(addr, chain);
-    document.getElementById("scamTab").innerHTML = scam.error ? `<div class="glass-panel p-6 text-red-400">❌ ${scam.error}</div>` :
-      `<div class="glass-panel p-6"><h2 class="text-2xl font-bold"><i class="fas fa-shield-alt text-red-400 mr-2"></i>Scam Token Detection</h2><div class="flex justify-between"><span class="px-4 py-1 rounded-full ${scam.risk>70?'bg-red-600':scam.risk>40?'bg-orange-500':'bg-green-600'}">Risk ${scam.risk}%</span></div><div class="mt-3">${scam.flags.map(f=>`<span class="inline-block bg-red-900/40 px-2 py-0.5 rounded-full text-xs mr-1">${f}</span>`).join('')}</div></div>`;
+    function updateDataSourceStatus(message, tone = "text-slate-400") {
+      const status = document.getElementById("dataSourceStatus");
+      if (status) status.className = `text-sm ${tone}`;
+      if (status) status.textContent = message;
+    }
 
-    // Trading Strategy
-    const market = await getTokenMarketData(addr);
-    document.getElementById("strategyTab").innerHTML = market.error ? `<div class="glass-panel p-6 text-red-400">❌ ${market.error}</div>` :
-      `<div class="glass-panel p-6"><h2 class="text-2xl font-bold">Token Market Data</h2><div class="grid grid-cols-2 gap-3"><div class="metric-card"><p>Price</p><div class="stat-value">$${market.price}</div></div><div class="metric-card"><p>Liquidity</p><div class="stat-value">${market.liquidity}</div></div><div class="metric-card"><p>24h Volume</p><div class="stat-value">${market.volume24h}</div></div></div></div>`;
+    function updatePortfolioFromTokens(tokens = [], totalValue = portfolioValue) {
+      const tokenMap = new Map(tokens.map((token) => [String(token.symbol || "").toUpperCase(), token]));
+      const knownSymbols = new Set(assets.filter((asset) => asset.symbol !== "OTHER").map((asset) => asset.symbol));
+      const knownValue = assets.reduce((sum, asset) => {
+        if (asset.symbol === "OTHER") return sum;
+        const token = tokenMap.get(asset.symbol);
+        const value = Number(token?.value || 0);
+        if (value > 0) {
+          asset.current = totalValue > 0 ? (value / totalValue) * 100 : asset.current;
+          asset.price = Number(token.price || asset.price);
+        } else if (tokens.length) {
+          asset.current = 0;
+        }
+        return sum + value;
+      }, 0);
 
-    // Yield Optimizer
-    const pools = await fetchRealYield("USDC", chain);
-    document.getElementById("yieldTab").innerHTML = pools.error ? `<div class="glass-panel p-6 text-red-400">❌ ${pools.error}</div>` :
-      `<div class="glass-panel p-6"><h2 class="text-2xl font-bold">Yield Optimizer</h2><div class="grid gap-2">${pools.map(p=>`<div class="metric-card flex justify-between"><span>${p.protocol}</span><span class="text-green-300">${p.apy.toFixed(2)}%</span></div>`).join('')}</div></div>`;
+      const otherValue = tokens
+        .filter((token) => !knownSymbols.has(String(token.symbol || "").toUpperCase()))
+        .reduce((sum, token) => sum + Number(token.value || 0), 0);
+      const other = assets.find((asset) => asset.symbol === "OTHER");
+      other.current = totalValue > 0 ? (otherValue / totalValue) * 100 : 0;
 
-    // Identity
-    const ident = await getIdentity(addr);
-    const rep = await getReputationScore(addr, chain);
-    document.getElementById("identityTab").innerHTML = `<div class="glass-panel p-6"><h2 class="text-2xl font-bold">Identity</h2><div class="flex flex-col items-center"><div class="reputation-nft bg-gradient-to-br from-${rep.grade==='Gold'?'yellow-400':'gray-400'} to-${rep.grade==='Gold'?'orange-500':'gray-600'}"><i class="fas fa-crown"></i></div><p>${rep.grade} (Score ${rep.score})</p></div><div>ENS: ${ident.ens || '—'}</div></div>`;
+      // Normalize any rounding residue so the chart stays visually honest.
+      const currentTotal = assets.reduce((sum, asset) => sum + asset.current, 0);
+      if (currentTotal > 0) {
+        assets.forEach((asset) => {
+          asset.current = (asset.current / currentTotal) * 100;
+        });
+      }
 
-    // AI Trading Agents
-    const agents = await getCoinGeckoPriceChanges();
-    document.getElementById("agentsTab").innerHTML = agents.error ? `<div class="glass-panel p-6 text-red-400">❌ ${agents.error}</div>` :
-      `<div class="glass-panel p-6"><h2 class="text-2xl font-bold">AI Trading Agents</h2><div class="grid grid-cols-2 gap-2">${agents.map(s=>`<div class="metric-card flex justify-between"><span>${s.token}</span><span class="${s.signal==='BUY'?'text-green-400':s.signal==='SELL'?'text-red-400':'text-yellow-400'}">${s.signal}</span><span>Δ${s.change}%</span></div>`).join('')}</div></div>`;
+      portfolioValue = totalValue || portfolioValue;
+      document.getElementById("aumMetric").textContent = formatUsd(portfolioValue);
+      renderAllocation();
+    }
 
-    // Prediction Markets
-    const preds = await getRealPredictionEvents();
-    document.getElementById("predictionTab").innerHTML = preds.error ? `<div class="glass-panel p-6 text-red-400">❌ ${preds.error}</div>` :
-      `<div class="glass-panel p-6"><h2 class="text-2xl font-bold">Prediction Markets</h2>${preds.map(p=>`<div class="metric-card mb-2"><div class="flex justify-between"><span>${p.name}</span><span>${p.prob.toFixed(0)}%</span></div><div class="prob-bar mt-1"><div class="prob-fill" style="width:${p.prob}%"></div></div></div>`).join('')}</div>`;
+    function computeTargets() {
+      const risk = document.getElementById("riskSelect").value;
+      const stableMin = Number(document.getElementById("stableBuffer").value);
+      const targetAsset = document.getElementById("targetAsset").value;
+      const raw = assets.map((asset) => {
+        let target = asset.base[risk];
+        if (asset.symbol !== "USDC" && asset.symbol !== "OTHER") {
+          const momentumBoost = asset.change * 0.33;
+          const volatilityPenalty = (asset.volatility - 45) * 0.035;
+          target += momentumBoost - volatilityPenalty;
+          if (asset.symbol === targetAsset) target += risk === "aggressive" ? 4 : 2;
+        }
+        const minimumTarget = asset.symbol === "USDC" ? stableMin : asset.symbol === "OTHER" ? 0 : 2;
+        return { ...asset, target: clamp(target, minimumTarget, 55) };
+      });
 
-    // Cross-Chain (placeholder)
-    document.getElementById("crossTab").innerHTML = `<div class="glass-panel p-6"><h2 class="text-2xl font-bold">Cross-Chain Execution</h2><div class="metric-card">⛽ Gas data requires Etherscan API key (optional).</div><div class="mt-2"><button id="simulateSwapBtn" class="bg-indigo-700 px-3 py-1 rounded text-sm">Simulate USDC → ETH (mock)</button><div id="swapResult" class="text-xs mt-1"></div></div></div>`;
-    document.getElementById("simulateSwapBtn")?.addEventListener("click", () => document.getElementById("swapResult").innerHTML = "✅ Swap simulated (mock).");
+      const usdc = raw.find((asset) => asset.symbol === "USDC");
+      usdc.target = Math.max(usdc.target, stableMin);
+      const nonStable = raw.filter((asset) => asset.symbol !== "USDC");
+      const remaining = 100 - usdc.target;
+      const totalNonStable = nonStable.reduce((sum, asset) => sum + asset.target, 0);
 
-    // Macro
-    const fg = await getRealFearGreed();
-    document.getElementById("macroTab").innerHTML = fg.error ? `<div class="glass-panel p-6 text-red-400">❌ ${fg.error}</div>` :
-      `<div class="glass-panel p-6"><h2 class="text-2xl font-bold">Macro & Geopolitical</h2><div class="metric-card">Fear & Greed: ${fg.fng}/100 (${fg.classification})<div class="prob-bar mt-1"><div class="prob-fill" style="width:${fg.fng}%"></div></div></div></div>`;
+      nonStable.forEach((asset) => {
+        asset.target = (asset.target / totalNonStable) * remaining;
+      });
 
-    // Social Trading (placeholder)
-    document.getElementById("socialTab").innerHTML = `<div class="glass-panel p-6"><h2 class="text-2xl font-bold">Social Trading</h2><div class="text-yellow-300">Leaderboard and copy-trading coming soon.</div></div>`;
-  }
+      const normalizedTotal = raw.reduce((sum, asset) => sum + asset.target, 0);
+      raw.forEach((asset) => {
+        asset.target = (asset.target / normalizedTotal) * 100;
+        asset.drift = asset.target - asset.current;
+      });
 
-  // ---------- WALLET CONNECTION ----------
-  async function connectWallet() {
-    if (!window.ethereum) { alert("❌ MetaMask not detected. Please install MetaMask."); return; }
-    try {
-      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-      if (!accounts || accounts.length === 0) { alert("❌ No account selected."); return; }
-      const address = accounts[0];
-      currentWallet = address;
-      document.getElementById("walletInput").value = address;
-      document.getElementById("walletConnectBtn").innerHTML = `<i class="fas fa-wallet"></i> ${address.slice(0,6)}...${address.slice(-4)}`;
-      await refreshAll();
-      window.ethereum.on("accountsChanged", (newAccounts) => {
-        if (newAccounts && newAccounts.length) {
-          currentWallet = newAccounts[0];
-          document.getElementById("walletInput").value = currentWallet;
-          document.getElementById("walletConnectBtn").innerHTML = `<i class="fas fa-wallet"></i> ${currentWallet.slice(0,6)}...${currentWallet.slice(-4)}`;
-          refreshAll();
+      return raw;
+    }
+
+    function renderAllocation() {
+      const targets = computeTargets();
+      const rows = document.getElementById("allocationRows");
+      rows.innerHTML = targets.map((asset) => {
+        const action = Math.abs(asset.drift) < 1.5 ? "Hold" : asset.drift > 0 ? "Buy" : "Sell";
+        const tone = action === "Buy" ? "text-emerald-300" : action === "Sell" ? "text-rose-300" : "text-slate-300";
+        const amount = Math.abs((asset.drift / 100) * portfolioValue);
+        return `
+          <div class="table-row">
+            <div>
+              <div class="flex items-center gap-2 font-black">
+                <span class="h-3 w-3 rounded-full" style="background:${asset.color}"></span>${asset.symbol}
+              </div>
+              <p class="text-xs text-slate-500">${asset.name}</p>
+            </div>
+            <div>
+              <div class="mb-1 flex justify-between text-sm"><span>${asset.current.toFixed(1)}%</span><span>${formatUsd(portfolioValue * asset.current / 100)}</span></div>
+              <div class="bar"><span style="width:${asset.current}%"></span></div>
+            </div>
+            <div>
+              <div class="mb-1 flex justify-between text-sm"><span>${asset.target.toFixed(1)}%</span><span>${formatUsd(portfolioValue * asset.target / 100)}</span></div>
+              <div class="bar"><span style="width:${asset.target}%"></span></div>
+            </div>
+            <div class="font-extrabold ${tone}">
+              ${action}${action === "Hold" ? "" : ` ${formatUsd(amount)}`}
+              <p class="text-xs font-medium text-slate-500">Drift ${asset.drift > 0 ? "+" : ""}${asset.drift.toFixed(1)}%</p>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      const drift = targets.reduce((sum, asset) => sum + Math.abs(asset.drift), 0) / 2;
+      const riskScore = Math.round(targets.reduce((sum, asset) => sum + (asset.symbol === "USDC" ? 0 : asset.target * asset.volatility), 0) / 42);
+      document.getElementById("driftMetric").textContent = `${drift.toFixed(1)}%`;
+      document.getElementById("riskMetric").textContent = `${clamp(riskScore, 10, 95)}/100`;
+      document.getElementById("agentModeBadge").textContent = document.getElementById("riskSelect").selectedOptions[0].textContent;
+      document.getElementById("rebalanceConfidence").innerHTML = `<i class="fa-solid fa-star text-cyan-300"></i> ${Math.round(96 - drift)}% confidence`;
+      renderChart(targets);
+      return targets;
+    }
+
+    function renderChart(targets) {
+      const ctx = document.getElementById("allocationChart");
+      const data = {
+        labels: targets.map((asset) => asset.symbol),
+        datasets: [
+          {
+            label: "Target",
+            data: targets.map((asset) => asset.target.toFixed(2)),
+            backgroundColor: targets.map((asset) => asset.color),
+            borderColor: "rgba(2, 6, 23, 0.9)",
+            borderWidth: 4
+          }
+        ]
+      };
+
+      if (allocationChart) {
+        allocationChart.data = data;
+        allocationChart.update();
+        return;
+      }
+
+      allocationChart = new Chart(ctx, {
+        type: "doughnut",
+        data,
+        options: {
+          responsive: true,
+          cutout: "66%",
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: { color: "#cbd5e1", usePointStyle: true, padding: 18 }
+            },
+            tooltip: {
+              callbacks: {
+                label: (context) => `${context.label}: ${Number(context.parsed).toFixed(1)}%`
+              }
+            }
+          }
         }
       });
-    } catch (err) {
-      console.error(err);
-      alert("❌ Connection failed: " + (err.message || "Unknown error"));
     }
-  }
 
-  async function fullAnalysis() {
-    let val = document.getElementById("walletInput").value.trim();
-    if(!val) { alert("Enter a wallet address"); return; }
-    currentWallet = val;
-    currentChain = document.getElementById("chainSelect").value;
-    await refreshAll();
-  }
+    function renderSignals() {
+      document.getElementById("signalCards").innerHTML = signals.map((signal) => `
+        <div class="glass-soft p-4">
+          <div class="flex items-start gap-3">
+            <div class="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-slate-900/80 ${signal.tone}">
+              <i class="fa-solid ${signal.icon}"></i>
+            </div>
+            <div>
+              <div class="flex flex-wrap items-center gap-2">
+                <h4 class="font-black">${signal.title}</h4>
+                <span class="text-sm font-extrabold ${signal.tone}">${signal.value}</span>
+              </div>
+              <p class="mt-1 text-sm leading-6 text-slate-400">${signal.detail}</p>
+            </div>
+          </div>
+        </div>
+      `).join("");
+    }
 
-  // ---------- INITIALIZATION ----------
-  window.onload = async () => {
-    await fetchKeysFromBackend();
-    document.getElementById("walletConnectBtn").onclick = connectWallet;
-    document.getElementById("analyzeBtn").onclick = fullAnalysis;
-    document.getElementById("copyBtn").onclick = () => { navigator.clipboard.writeText(currentWallet); alert("Copied"); };
-    document.getElementById("exportBtn").onclick = () => { let blob = new Blob([JSON.stringify({ wallet:currentWallet, timestamp:new Date() })], {type:"application/json"}); let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download="report.json"; a.click(); };
-    document.getElementById("darkToggle").onclick = () => document.body.classList.toggle("light");
-    document.querySelectorAll(".nav-item").forEach(tab => {
-      tab.addEventListener("click", () => {
-        document.querySelectorAll(".nav-item").forEach(t=>t.classList.remove("active"));
-        tab.classList.add("active");
-        let id = tab.getAttribute("data-tab");
-        document.querySelectorAll(".module").forEach(m=>m.classList.remove("active-module"));
-        document.getElementById(`${id}Tab`).classList.add("active-module");
+    function renderRoutes(routes, amount, settlement, target) {
+      document.getElementById("routeRows").innerHTML = routes.map((route, index) => {
+        const selected = index === 0;
+        const allowed = route.allowed !== undefined ? route.allowed : route.slippage <= Number(document.getElementById("slippageRange").value);
+        const slippage = route.estimatedSlippageBps !== undefined ? route.estimatedSlippageBps / 100 : route.slippage;
+        const cost = route.estimatedCostUsd !== undefined ? route.estimatedCostUsd : route.cost;
+        const primitive = route.circlePrimitive || route.primitive || `${route.eta?.toFixed?.(1) || "1.0"} min`;
+        const price = route.price || ((assets.find((item) => item.symbol === target) || assets[1]).price * (1 + slippage / 100));
+        const badgeTone = selected && allowed ? "text-emerald-300" : allowed ? "text-cyan-300" : "text-amber-300";
+
+        return `
+          <div class="route-row ${selected ? "border-emerald-300/40 bg-emerald-400/5" : ""}">
+            <div>
+              <div class="flex flex-wrap items-center gap-2 font-black">
+                <i class="fa-solid ${route.icon || "fa-route"} ${badgeTone}"></i>
+                ${route.name}
+                ${selected ? '<span class="pill !py-1 text-[0.65rem]"><i class="fa-solid fa-crown text-amber-300"></i> Best</span>' : ""}
+              </div>
+              <p class="text-xs text-slate-500">${route.source || document.getElementById("sourceMarket").value} -> ${route.chain}${route.chain === "Off-chain" ? "" : ` -> ${route.destination || document.getElementById("destMarket").value}`} via ${settlement}</p>
+            </div>
+            <div>
+              <p class="font-extrabold">${formatUsd(price)}</p>
+              <p class="text-xs text-slate-500">${slippage.toFixed(2)}% expected slippage</p>
+            </div>
+            <div>
+              <p class="font-extrabold ${allowed ? "text-emerald-300" : "text-amber-300"}">${formatUsd(cost)}</p>
+              <p class="text-xs text-slate-500">fee + price impact</p>
+            </div>
+            <div>
+              <p class="font-extrabold">${primitive}</p>
+              <p class="text-xs text-slate-500">${route.latencyMs ? `${route.latencyMs}ms ETA` : "settlement rail"}</p>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    async function rankRoutes() {
+      const source = document.getElementById("sourceMarket").value;
+      const destination = document.getElementById("destMarket").value;
+      const amount = Number(document.getElementById("orderAmount").value || 0);
+      const maxSlippage = Number(document.getElementById("slippageRange").value);
+      const target = document.getElementById("targetAsset").value;
+      const asset = assets.find((item) => item.symbol === target) || assets[1];
+      const settlement = document.getElementById("settlementAsset").value;
+
+      try {
+        const url = new URL("/api/execution-plan", window.location.origin);
+        url.searchParams.set("source", source);
+        url.searchParams.set("destination", destination);
+        url.searchParams.set("amount", amount);
+        url.searchParams.set("settlementAsset", settlement);
+        url.searchParams.set("maxSlippageBps", Math.round(maxSlippage * 100));
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const plan = await response.json();
+        const routes = plan.routes.map((route) => ({
+          ...route,
+          price: asset.price * (1 + (route.estimatedSlippageBps / 10000)),
+          icon: route.chain === "Arc" ? "fa-circle-nodes" : route.type === "bridge" ? "fa-bridge" : route.type === "dex" ? "fa-layer-group" : "fa-building-columns"
+        }));
+        renderRoutes(routes, amount, settlement, target);
+        const best = routes[0];
+        log(`Arc-aware route ranked: ${best.name} (${best.circlePrimitive}) selected for ${formatUsd(amount)} ${settlement}->${target}.`, best.allowed ? "good" : "warn");
+        return routes;
+      } catch (error) {
+        log(`Backend execution planner unavailable; using local simulator. ${error.message}`, "warn");
+      }
+
+      const routes = venues.map((venue) => {
+        const sameChainBonus = venue.chain === destination ? 0.18 : 0;
+        const cctpPenalty = settlement === "USDC" && source !== destination ? 0.07 : 0.16;
+        const slippage = clamp((amount / 100000) * (100 - venue.depth) * 0.08 + venue.fee + cctpPenalty - sameChainBonus, 0.03, 2.4);
+        const price = asset.price * (1 + slippage / 100);
+        const cost = amount * (slippage / 100);
+        const eta = venue.latency + (source === destination ? 0 : 0.7);
+        const score = venue.depth - slippage * 18 - eta * 2;
+        return { ...venue, slippage, price, cost, eta, score };
+      }).sort((a, b) => b.score - a.score);
+
+      renderRoutes(routes.map((route) => ({ ...route, allowed: route.slippage <= maxSlippage })), amount, settlement, target);
+
+      const best = routes[0];
+      log(`Route ranked: ${best.name} on ${best.chain} selected for ${formatUsd(amount)} ${settlement}->${target}; expected cost ${formatUsd(best.cost)}.`, best.slippage <= maxSlippage ? "good" : "warn");
+      return routes;
+    }
+
+    async function fetchCircleStatus() {
+      const pill = document.getElementById("circleStatusPill");
+      const message = document.getElementById("circleMessage");
+      try {
+        const response = await fetch("/api/circle");
+        const data = await response.json();
+        circleState = data;
+
+        if (data.connected) {
+          pill.innerHTML = `<span class="status-dot good"></span> Circle API connected (${data.environment})`;
+          message.textContent = `Circle API key is active on ${data.environment}. Master wallet ${data.masterWalletId || "configured"} is available; App/Swap Kit ${data.appKit?.configured ? "key is configured" : "key still needs env setup"}.`;
+          log("Circle configuration verified through backend /v1/configuration.", "good");
+        } else if (data.configured) {
+          pill.innerHTML = `<span class="status-dot warn"></span> Circle key configured`;
+          message.textContent = data.message || "Circle key is present, but configuration verification did not complete.";
+          log(`Circle key present but verification returned ${data.status || "unknown status"}.`, "warn");
+        } else {
+          pill.innerHTML = `<span class="status-dot bad"></span> Add CIRCLE_API_KEY`;
+          message.textContent = data.message || "Set CIRCLE_API_KEY in the deployment environment to enable Circle-backed settlement checks.";
+          log("Circle API key missing. Add CIRCLE_API_KEY in Vercel environment variables for prize-ready integration.", "bad");
+        }
+      } catch (error) {
+        pill.innerHTML = '<span class="status-dot bad"></span> Circle status offline';
+        message.textContent = "Unable to reach the Circle status endpoint. The UI remains usable in simulation mode.";
+        log(`Circle status fetch failed: ${error.message}`, "bad");
+      }
+    }
+
+    async function refreshMarketData() {
+      log("Refreshing market signals through backend CoinGecko, DefiLlama, and Fear & Greed integrations.", "info");
+      try {
+        const response = await fetch("/api/market-signals");
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        const priceMap = new Map((data.prices || []).map((item) => [item.symbol, item]));
+        assets.forEach((asset) => {
+          const live = priceMap.get(asset.symbol);
+          if (!live) return;
+          asset.price = Number(live.price || asset.price);
+          asset.change = Number(live.change24h || asset.change);
+        });
+        signals[0].detail = `${data.sources?.prices || "Market"} prices are live. ${data.sources?.yields || "Yield"} found ${data.yields?.length || 0} USDC pools.`;
+        signals[1].value = data.fearGreed?.classification || signals[1].value;
+        signals[1].detail = `Fear & Greed index is ${data.fearGreed?.value || "n/a"}/100; agent adjusts beta and USDC buffer from this regime signal.`;
+        signals[2].detail = `Top USDC yield rail: ${data.yields?.[0]?.protocol || "USDC"} on ${data.yields?.[0]?.chain || "Arc/Circle"} at ${Number(data.yields?.[0]?.apy || 0).toFixed(2)}% APY.`;
+        renderSignals();
+        renderAllocation();
+        rankRoutes();
+        log("Market intelligence refreshed and adaptive weights recalculated.", "good");
+      } catch (error) {
+        log(`Market refresh failed, using embedded fallback data: ${error.message}`, "warn");
+      }
+    }
+
+    async function loadLivePortfolio() {
+      const address = document.getElementById("walletInput").value.trim();
+      const chain = chainApiName(document.getElementById("chainSelect").value);
+      updateDataSourceStatus("Loading server-side Zerion + GoldRush portfolio...", "text-cyan-300");
+      log(`Requesting live portfolio for ${address.slice(0, 6)}...${address.slice(-4)} on ${chain}.`, "info");
+
+      try {
+        const url = new URL("/api/portfolio", window.location.origin);
+        url.searchParams.set("address", address);
+        url.searchParams.set("chain", chain);
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        updatePortfolioFromTokens(data.tokens, Number(data.totalValue || portfolioValue));
+        const sourceSummary = Object.entries(data.dataSources || {})
+          .map(([name, source]) => `${name}: ${source.status}`)
+          .join(" | ");
+        updateDataSourceStatus(`${data.mode === "live" ? "Live" : "Demo"} portfolio loaded. ${sourceSummary}`, data.mode === "live" ? "text-emerald-300" : "text-amber-300");
+        log(data.message || "Portfolio data loaded.", data.mode === "live" ? "good" : "warn");
+      } catch (error) {
+        updateDataSourceStatus("Portfolio API unavailable; using built-in demo allocation.", "text-amber-300");
+        log(`Portfolio load failed: ${error.message}`, "bad");
+      }
+    }
+
+    function generateRebalance() {
+      const targets = renderAllocation();
+      const orders = targets
+        .filter((asset) => Math.abs(asset.drift) >= 1.5)
+        .map((asset) => `${asset.drift > 0 ? "BUY" : "SELL"} ${asset.symbol} ${formatUsd(Math.abs(asset.drift / 100 * portfolioValue))}`);
+      log(`Adaptive rebalance generated for ${document.getElementById("riskSelect").value} profile: ${orders.join(" | ")}.`, "good");
+    }
+
+    async function simulateExecution() {
+      const routes = await rankRoutes();
+      const best = routes[0];
+      const settlement = document.getElementById("settlementAsset").value;
+      const source = document.getElementById("sourceMarket").value;
+      const destination = document.getElementById("destMarket").value;
+      const circleCopy = circleState.connected ? "Circle verified" : "Circle simulation mode";
+      log(`${circleCopy}: prepare ${settlement} transfer ${source}->${destination} with CCTP-aware route and nanopayment telemetry.`, circleState.connected ? "good" : "warn");
+      log(`Execution packet staged: venue=${best.name}, chain=${best.chain}, eta=${best.eta.toFixed(1)} min, slippage=${best.slippage.toFixed(2)}%.`, "info");
+    }
+
+    function bindControls() {
+      const rerenderControls = ["riskSelect", "targetAsset", "stableBuffer", "slippageRange"];
+      rerenderControls.forEach((id) => {
+        document.getElementById(id).addEventListener("input", () => {
+          document.getElementById("stableBufferLabel").textContent = document.getElementById("stableBuffer").value;
+          document.getElementById("slippageLabel").textContent = Number(document.getElementById("slippageRange").value).toFixed(2);
+          renderAllocation();
+          rankRoutes();
+        });
       });
+      ["sourceMarket", "destMarket", "orderAmount", "settlementAsset", "chainSelect"].forEach((id) => {
+        document.getElementById(id).addEventListener("input", rankRoutes);
+      });
+      document.getElementById("rebalanceBtn").addEventListener("click", generateRebalance);
+      document.getElementById("executeBtn").addEventListener("click", simulateExecution);
+      document.getElementById("routeBtn").addEventListener("click", rankRoutes);
+      document.getElementById("scanMarketsBtn").addEventListener("click", refreshMarketData);
+      document.getElementById("loadPortfolioBtn").addEventListener("click", loadLivePortfolio);
+      document.getElementById("clearLogBtn").addEventListener("click", () => {
+        document.getElementById("agentLog").innerHTML = "";
+        log("Trace cleared. Agent standing by.", "info");
+      });
+    }
+
+    window.addEventListener("load", async () => {
+      bindControls();
+      renderSignals();
+      renderAllocation();
+      rankRoutes();
+      log("ArcFlow agent booted with adaptive portfolio and cross-market execution modules.", "good");
+      await fetchCircleStatus();
+      await refreshMarketData();
+      await loadLivePortfolio();
     });
-    document.getElementById("walletInput").value = currentWallet;
-    await refreshAll();
-  };
-</script>
+  </script>
 </body>
 </html>
