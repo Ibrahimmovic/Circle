@@ -1,8 +1,14 @@
 export default function handler(req, res) {
-  // Only allow same-origin requests (or add your domain)
+  const circleEnvironment = process.env.CIRCLE_ENV === 'production' ? 'production' : 'sandbox';
+
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.status(200).json({
-    covalent: process.env.COVALENT_KEY || '',
-    zerion: process.env.ZERION_KEY || ''
+    circle: {
+      configured: Boolean(process.env.CIRCLE_API_KEY || process.env.CIRCLE_API_KEY_SANDBOX),
+      environment: circleEnvironment
+    },
+    marketData: {
+      coingecko: 'public'
+    }
   });
 }
