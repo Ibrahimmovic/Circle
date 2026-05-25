@@ -369,7 +369,7 @@
             <p class="text-xs font-bold uppercase tracking-[0.25em] text-cyan-200/80">Control Surface</p>
             <h3 class="text-2xl font-black">Agent constraints</h3>
           </div>
-          <button id="scanMarketsBtn" class="btn-secondary !px-4 !py-2 text-sm"><i class="fa-solid fa-radar"></i> Refresh market data</button>
+          <button id="scanMarketsBtn" class="btn-secondary !px-4 !py-2 text-sm"><i class="fa-solid fa-satellite-dish"></i> Refresh market data</button>
         </div>
 
         <div class="grid gap-4 sm:grid-cols-2">
@@ -426,7 +426,7 @@
             <p class="text-xs font-bold uppercase tracking-[0.25em] text-violet-200/80">Adaptive Portfolio</p>
             <h3 class="text-2xl font-black">Rebalance intent</h3>
           </div>
-          <span id="rebalanceConfidence" class="pill"><i class="fa-solid fa-sparkles text-cyan-300"></i> 91% confidence</span>
+          <span id="rebalanceConfidence" class="pill"><i class="fa-solid fa-star text-cyan-300"></i> 91% confidence</span>
         </div>
         <div class="table-row text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
           <span>Asset</span>
@@ -571,7 +571,7 @@
     ];
 
     const venues = [
-      { name: "Uniswap v3", chain: "Ethereum", fee: 0.08, latency: 2.1, depth: 94, icon: "fa-unicorn" },
+      { name: "Uniswap v3", chain: "Ethereum", fee: 0.08, latency: 2.1, depth: 94, icon: "fa-layer-group" },
       { name: "Aerodrome", chain: "Base", fee: 0.05, latency: 0.8, depth: 86, icon: "fa-plane-departure" },
       { name: "Curve", chain: "Arbitrum", fee: 0.04, latency: 1.2, depth: 89, icon: "fa-wave-square" },
       { name: "Jupiter", chain: "Solana", fee: 0.06, latency: 0.5, depth: 81, icon: "fa-bolt" },
@@ -663,7 +663,7 @@
       document.getElementById("driftMetric").textContent = `${drift.toFixed(1)}%`;
       document.getElementById("riskMetric").textContent = `${clamp(riskScore, 10, 95)}/100`;
       document.getElementById("agentModeBadge").textContent = document.getElementById("riskSelect").selectedOptions[0].textContent;
-      document.getElementById("rebalanceConfidence").innerHTML = `<i class="fa-solid fa-sparkles text-cyan-300"></i> ${Math.round(96 - drift)}% confidence`;
+      document.getElementById("rebalanceConfidence").innerHTML = `<i class="fa-solid fa-star text-cyan-300"></i> ${Math.round(96 - drift)}% confidence`;
       renderChart(targets);
       return targets;
     }
