@@ -46,3 +46,26 @@ This repo is configured for Vercel:
 - Serverless routes: `api/*.js`
 
 Set the environment variables in Vercel before sharing the live demo link.
+
+## Arc / Canteen setup notes
+
+The hackathon recommends installing the Arc CLI for Arc testnet RPC access and bundled docs:
+
+```bash
+uv tool install git+https://github.com/the-canteen-dev/ARC-cli
+```
+
+Useful links:
+
+- Canteen Discord: <https://discord.gg/TGnyfKh23V>
+- Arc builder Discord: <https://discord.com/invite/buildonarc>
+- Arc docs: <https://arc-node.thecanteenapp.com/>
+- Submission form: <https://forms.gle/ok3Gr9zhmHnApvK48>
+
+## Demo checklist
+
+1. Show `/api/circle` reporting Circle API connectivity and App/Swap Kit readiness.
+2. Load a live EVM wallet in the control surface to demonstrate Zerion + GoldRush aggregation.
+3. Change risk posture and stablecoin buffer to show adaptive rebalance output.
+4. Rank routes from Base/Ethereum/Solana to Arc and explain Gateway/CCTP/USDC settlement.
+5. Click "Simulate Cross-Market Execution" and narrate the agent trace.
