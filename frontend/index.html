@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>OmniWallet Pro | Wallet Connect + Real Portfolio (Zerion/GoldRush) + Circle API</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js"></script>
+  <style>
+    body { background: radial-gradient(ellipse at 20% 30%, #0a0f1e, #010409); font-family: 'Inter', sans-serif; transition: background 0.2s; }
+    body.light { background: #eef2f8; }
+    .glass-panel { background: rgba(12,20,32,0.7); backdrop-filter: blur(14px); border: 1px solid rgba(0,255,255,0.2); border-radius: 2rem; }
+    body.light .glass-panel { background: rgba(245,248,250,0.85); border-color: rgba(0,120,255,0.2); }
+    .nav-item { transition: 0.2s; cursor: pointer; border-radius: 1rem; padding: 0.85rem 1rem; margin-bottom: 0.5rem; font-weight: 600; display: flex; align-items: center; gap: 0.75rem; }
+    .nav-item.active { background: linear-gradient(135deg, #0ea5e9, #8b5cf6); color: white; box-shadow: 0 8px 18px -6px rgba(14,165,233,0.5); }
+    .module { display: none; }
+    .module.active-module { display: block; }
+    .metric-card { background: rgba(0,0,0,0.35); border-radius: 1.25rem; padding: 1rem; backdrop-filter: blur(4px); transition: transform 0.1s; }
+    .metric-card:hover { transform: translateY(-2px); background: rgba(0,0,0,0.5); }
+    .stat-value { font-size: 1.7rem; font-weight: 800; background: linear-gradient(135deg, #f0f9ff, #a5f3fc); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .spinner { border: 2px solid rgba(14,165,233,0.2); border-top: 2px solid #0ea5e9; border-radius: 50%; width: 32px; height: 32px; animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .prob-bar { height: 6px; background: #1e293b; border-radius: 4px; overflow: hidden; }
+    .prob-fill { height: 100%; background: linear-gradient(90deg, #0ea5e9, #8b5cf6); }
+    .reputation-nft { width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto; box-shadow: 0 0 15px rgba(0,255,255,0.5); }
+    .connect-btn { background: linear-gradient(135deg, #0ea5e9, #8b5cf6); padding: 8px 18px; border-radius: 2rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .connect-btn:hover { opacity: 0.9; transform: scale(1.02); }
+  </style>
+</head>
+<body class="text-gray-200 antialiased p-4 md:p-6">
+
+<div class="max-w-7xl mx-auto">
+  <!-- Header with Wallet Connect -->
+  <div class="flex flex-wrap justify-between items-center gap-4 mb-8">
+    <div class="flex items-center gap-3">
+      <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-400 to-indigo-600 flex items-center justify-center shadow-lg"><i class="fas fa-brain text-white text-2xl"></i></div>
+      <div>
+        <h1 class="text-3xl font-extrabold bg-gradient-to-r from-cyan-300 via-blue-400 to-purple-400 bg-clip-text text-transparent">OmniWallet<span class="text-white"> Pro</span></h1>
+        <p class="text-slate-400 text-xs">Wallet Connect · Live Portfolio · AI Agents · Circle API</p>
+      </div>
+    </div>
+    <div class="flex gap-3 items-center">
+      <button id="walletConnectBtn" class="connect-btn"><i class="fas fa-plug mr-1"></i> Connect Wallet</button>
+      <button id="darkToggle" class="bg-slate-800/60 backdrop-blur p-2 rounded-2xl w-10 h-10"><i class="fas fa-moon"></i></button>
+      <button id="settingsBtn" class="bg-slate-800/60 backdrop-blur p-2 rounded-2xl w-10 h-10"><i class="fas fa-key"></i></button>
+      <button id="exportBtn" class="bg-gradient-to-r from-indigo-600 to-purple-600 px-5 py-2 rounded-2xl text-sm font-bold shadow-md"><i class="fas fa-download"></i> Report</button>
+    </div>
+  </div>
+
+  <!-- Search Bar -->
+  <div class="glass-panel p-5 mb-8 border-cyan-500/30">
+    <div class="flex flex-col md:flex-row gap-3">
+      <div class="relative flex-1">
+        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-cyan-400"></i>
+        <input type="text" id="walletInput" placeholder="Wallet address (0x...) or token address" class="w-full bg-black/40 border border-cyan-800/50 rounded-2xl py-3 pl-11 pr-4 text-white">
+      </div>
+      <select id="chainSelect" class="bg-black/40 border border-cyan-800/50 rounded-2xl px-4 py-2">
+        <option value="ethereum">Ethereum</option><option value="bsc">BSC</option><option value="polygon">Polygon</option><option value="arbitrum">Arbitrum</option>
+      </select>
+      <button id="analyzeBtn" class="bg-cyan-600 hover:bg-cyan-500 px-6 py-2 rounded-2xl font-bold shadow-md"><i class="fas fa-chart-line"></i> Analyze</button>
+      <button id="copyBtn" class="bg-slate-700/70 px-4 rounded-2xl"><i class="fas fa-copy"></i></button>
+    </div>
+    <div class="flex gap-4 mt-3 text-xs text-slate-300">
+      <span class="demo-wallet cursor-pointer hover:text-cyan-300" data-addr="0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045">✨ Vitalik (ENS)</span>
+      <span class="demo-wallet cursor-pointer hover:text-cyan-300" data-addr="0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48">💵 USDC Token</span>
+    </div>
+    <p class="text-xs text-slate-400 mt-2">✅ Connect your wallet (MetaMask) to see your own portfolio and AI trading signals. All data is live from public APIs + your API keys.</p>
+  </div>
+
+  <!-- Sidebar + Modules -->
+  <div class="flex flex-col lg:flex-row gap-6">
+    <div class="lg:w-72 glass-panel p-3 h-fit sticky top-6">
+      <div class="nav-item active" data-tab="scam"><i class="fas fa-shield-halos w-5"></i> Scam Token</div>
+      <div class="nav-item" data-tab="strategy"><i class="fas fa-chart-line w-5"></i> Trading Strategy</div>
+      <div class="nav-item" data-tab="yield"><i class="fas fa-water w-5"></i> Yield Optimizer</div>
+      <div class="nav-item" data-tab="identity"><i class="fas fa-id-card w-5"></i> Social Identity</div>
+      <div class="nav-item" data-tab="agents"><i class="fas fa-robot w-5"></i> AI Trading Agents</div>
+      <div class="nav-item" data-tab="prediction"><i class="fas fa-chart-gantt w-5"></i> Prediction Markets</div>
+      <div class="nav-item" data-tab="portfolio"><i class="fas fa-chart-pie w-5"></i> Adaptive Portfolio</div>
+      <div class="nav-item" data-tab="cross"><i class="fas fa-exchange-alt w-5"></i> Cross‑Chain Exec</div>
+      <div class="nav-item" data-tab="macro"><i class="fas fa-globe-americas w-5"></i> Macro & Geo</div>
+      <div class="nav-item" data-tab="social"><i class="fas fa-users w-5"></i> Social Trading</div>
+    </div>
+
+    <div class="flex-1 space-y-5">
+      <div id="scamTab" class="module active-module"><div class="glass-panel p-6"><div class="spinner mx-auto"></div><p class="text-center">Loading token security...</p></div></div>
+      <div id="strategyTab" class="module"><div class="glass-panel p-6"><div class="spinner mx-auto"></div></div></div>
+      <div id="yieldTab" class="module"><div class="glass-panel p-6"><div class="spinner mx-auto"></div></div></div>
+      <div id="identityTab" class="module"><div class="glass-panel p-6"><div class="spinner mx-auto"></div></div></div>
+      <div id="agentsTab" class="module"><div class="glass-panel p-6"><div class="spinner mx-auto"></div></div></div>
+      <div id="predictionTab" class="module"><div class="glass-panel p-6"><div class="spinner mx-auto"></div></div></div>
+      <div id="portfolioTab" class="module"><div class="glass-panel p-6"><div class="spinner mx-auto"></div></div></div>
+      <div id="crossTab" class="module"><div class="glass-panel p-6"><div class="spinner mx-auto"></div></div></div>
+      <div id="macroTab" class="module"><div class="glass-panel p-6"><div class="spinner mx-auto"></div></div></div>
+      <div id="socialTab" class="module"><div class="glass-panel p-6"><div class="spinner mx-auto"></div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div id="apiModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50">
+  <div class="glass-panel p-6 w-full max-w-md">
+    <h3 class="text-xl font-bold mb-3">🔑 API Keys</h3>
+    <input type="text" id="zerionKey" placeholder="Zerion API Key (zk_...)" class="w-full bg-black/40 border border-cyan-700 rounded-xl p-2 mb-2">
+    <input type="text" id="goldrushKey" placeholder="GoldRush API Key (cqt_...)" class="w-full bg-black/40 border border-cyan-700 rounded-xl p-2 mb-2">
+    <input type="text" id="circleClientKey" placeholder="Circle Client Key (optional)" class="w-full bg-black/40 border border-cyan-700 rounded-xl p-2 mb-4">
+    <div class="flex justify-end gap-3">
+      <button id="closeModalBtn" class="bg-slate-700 px-4 py-2 rounded-xl">Cancel</button>
+      <button id="saveKeysBtn" class="bg-cyan-600 px-4 py-2 rounded-xl">Save</button>
+    </div>
+    <p class="text-xs text-slate-400 mt-3">Keys stored locally. Zerion + GoldRush are required for portfolio. Circle Client Key for wallet creation on Arc testnet.</p>
+  </div>
+</div>
+
+<script>
+  // ------------------- GLOBALS -------------------
+  let currentInput = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045";
+  let currentChain = "ethereum";
+  let apiKeys = { zerion: "", goldrush: "", circleClient: "" };
+  let charts = {};
+  let provider, signer, userAddress = null;
+
+  // Helper functions
+  function getChainId(chain) { const map = { ethereum:1, bsc:56, polygon:137, arbitrum:42161 }; return map[chain] || 1; }
+  function loadKeys() { let s = localStorage.getItem("omni_keys"); if(s) apiKeys = JSON.parse(s); document.getElementById("zerionKey").value = apiKeys.zerion; document.getElementById("goldrushKey").value = apiKeys.goldrush; document.getElementById("circleClientKey").value = apiKeys.circleClient; }
+  function saveKeys() { apiKeys.zerion = document.getElementById("zerionKey").value; apiKeys.goldrush = document.getElementById("goldrushKey").value; apiKeys.circleClient = document.getElementById("circleClientKey").value; localStorage.setItem("omni_keys", JSON.stringify(apiKeys)); document.getElementById("apiModal").classList.add("hidden"); if(currentInput) refreshAll(); }
+
+  // Wallet Connect (MetaMask)
+  async function connectWallet() {
+    if (!window.ethereum) { alert("MetaMask not detected. Please install MetaMask."); return; }
+    try {
+      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+      userAddress = accounts[0];
+      provider = new ethers.providers.Web3Provider(window.ethereum);
+      signer = provider.getSigner();
+      document.getElementById("walletConnectBtn").innerHTML = `<i class="fas fa-wallet"></i> ${userAddress.slice(0,6)}...${userAddress.slice(-4)}`;
+      document.getElementById("walletInput").value = userAddress;
+      currentInput = userAddress;
+      await refreshAll();
+      // Listen for account changes
+      window.ethereum.on("accountsChanged", (newAccounts) => {
+        if (newAccounts.length) { userAddress = newAccounts[0]; document.getElementById("walletInput").value = userAddress; currentInput = userAddress; refreshAll(); }
+        else { document.getElementById("walletConnectBtn").innerHTML = `<i class="fas fa-plug"></i> Connect Wallet`; userAddress = null; }
+      });
+    } catch (err) { console.error(err); alert("Failed to connect wallet."); }
+  }
+
+  // ---------- REAL API FUNCTIONS (public) ----------
+  // Scam Token (GoPlus)
+  async function getTokenScamData(tokenAddr, chainName) {
+    const chainId = getChainId(chainName);
+    const url = `https://api.gopluslabs.io/api/v1/token_security/${chainId}?contract_addresses=${tokenAddr}`;
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.code===1 && data.result && data.result[tokenAddr.toLowerCase()]) {
+        const info = data.result[tokenAddr.toLowerCase()];
+        let risk=0, flags=[];
+        if (info.is_honeypot==="1") { risk+=40; flags.push("🍯 Honeypot"); }
+        if (info.sell_tax && parseFloat(info.sell_tax)>10) { risk+=20; flags.push(`💰 Sell tax ${info.sell_tax}%`); }
+        if (info.buy_tax && parseFloat(info.buy_tax)>10) { risk+=10; flags.push(`💸 Buy tax ${info.buy_tax}%`); }
+        if (info.trading_cooldown==="1") { risk+=15; flags.push("⏱️ Cooldown"); }
+        if (info.owner_balance && parseFloat(info.owner_balance)>0) { risk+=10; flags.push("👑 Owner holds"); }
+        if (info.lp_holder?.length && !info.lp_holder.some(lp=>lp.locked==="1")) { risk+=15; flags.push("⚠️ Liquidity unlocked"); }
+        if (flags.length===0) flags.push("✅ No scam indicators");
+        risk = Math.min(100, risk);
+        return { risk, flags };
+      } else throw new Error();
+    } catch(e) { return { error: e.message }; }
+  }
+
+  // DexScreener market data
+  async function getTokenMarketData(tokenAddr) {
+    try {
+      const url = `https://api.dexscreener.com/latest/dex/search?q=${tokenAddr}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.pairs && data.pairs.length>0) {
+        const pair = data.pairs[0];
+        return {
+          price: parseFloat(pair.priceUsd).toFixed(4),
+          liquidity: pair.liquidity?.usd ? `$${parseFloat(pair.liquidity.usd).toLocaleString()}` : "N/A",
+          volume24h: pair.volume?.h24 ? `$${parseFloat(pair.volume.h24).toLocaleString()}` : "N/A",
+          chain: pair.chainId,
+          dex: pair.dexId
+        };
+      } else throw new Error();
+    } catch(e) { return { error: "No market data" }; }
+  }
+
+  // DeFiLlama
+  async function fetchRealYield(asset="USDC", chain="ethereum") {
+    try {
+      const res = await fetch("https://yields.llama.fi/pools");
+      const data = await res.json();
+      let filtered = data.data.filter(p => p.chain.toLowerCase()===chain.toLowerCase() && p.symbol.toUpperCase().includes(asset.toUpperCase()) && p.apy<50 && p.tvlUsd>100000);
+      filtered = filtered.sort((a,b)=>b.apy - a.apy).slice(0,5);
+      if(filtered.length) return filtered.map(p=>({ protocol:p.project, pool:p.symbol, tvl:`$${(p.tvlUsd/1e6).toFixed(1)}M`, apy:p.apy, risk:p.tvlUsd>5e7?"Low":"Medium" }));
+      throw new Error();
+    } catch(e) { return { error: e.message }; }
+  }
+
+  // Polymarket
+  async function getRealPredictionEvents() {
+    try {
+      const proxy = "https://api.allorigins.win/raw?url=";
+      const url = "https://gamma-api.polymarket.com/events?limit=5";
+      const res = await fetch(proxy+encodeURIComponent(url));
+      const data = await res.json();
+      if(data && data.length) return data.slice(0,3).map(e => ({ name: e.title || e.question, prob: (e.outcomePrices?.[0] || 0.5)*100, volume: e.volume ? `$${parseFloat(e.volume).toLocaleString()}` : "N/A" }));
+      throw new Error();
+    } catch(e) { return { error: "Failed to fetch" }; }
+  }
+
+  // Fear & Greed
+  async function getRealFearGreed() {
+    try { const res = await fetch("https://api.alternative.me/fng/"); const data = await res.json(); if(data.data && data.data[0]) return { fng: parseInt(data.data[0].value), classification: data.data[0].value_classification }; throw new Error(); } catch(e) { return { error: "Fear & Greed unavailable" }; }
+  }
+
+  // CoinGecko
+  async function getCoinGeckoPriceChanges() {
+    const coins = ["ethereum", "bitcoin", "solana", "matic-network", "dogecoin", "avalanche-2", "chainlink"];
+    const ids = coins.join(",");
+    try {
+      const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`);
+      const data = await res.json();
+      const mapping = { ethereum:"ETH", bitcoin:"BTC", solana:"SOL", "matic-network":"MATIC", dogecoin:"DOGE", "avalanche-2":"AVAX", chainlink:"LINK" };
+      return coins.map(id => {
+        const change = data[id]?.usd_24h_change ?? 0;
+        const signal = change > 5 ? "BUY" : (change < -5 ? "SELL" : "HOLD");
+        return { token: mapping[id], change: change.toFixed(1), signal };
+      });
+    } catch(e) { return { error: "CoinGecko failed" }; }
+  }
+
+  // ENS
+  async function getIdentity(addr) {
+    try {
+      let provider = new ethers.providers.JsonRpcProvider("https://cloudflare-eth.com");
+      let ens = await provider.lookupAddress(addr);
+      return { ens: ens || "No ENS" };
+    } catch(e) { return { error: "ENS failed" }; }
+  }
+
+  // Reputation score from scam risk
+  async function getReputationScore(addr, chainName) {
+    const scam = await getTokenScamData(addr, chainName);
+    if(scam.error) return { score: 0, grade: "N/A" };
+    let score = Math.max(0, 100 - scam.risk);
+    let grade = score>=80?"Gold":score>=50?"Silver":"Bronze";
+    return { score, grade };
+  }
+
+  // Portfolio: Zerion
+  async function getRealPortfolioZerion(addr, chainName) {
+    if(!apiKeys.zerion) return { error: "Zerion API key missing" };
+    const chainParam = chainName === "ethereum" ? "eth" : chainName;
+    const url = `https://api.zerion.io/v1/wallets/${addr}/positions/?currency=usd&filter[chain_ids]=${chainParam}`;
+    try {
+      const res = await fetch(url, { headers: { "Authorization": `Bearer ${apiKeys.zerion}` } });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if(data.data && data.data.length) {
+        let ethBalance = 0, usdcBalance = 0;
+        for (const pos of data.data) {
+          const symbol = pos.attributes?.fungible_info?.symbol || "";
+          const quantity = pos.attributes?.quantity?.native || 0;
+          if(symbol === "ETH") ethBalance += parseFloat(quantity);
+          if(symbol === "USDC") usdcBalance += parseFloat(quantity);
+        }
+        return { eth: ethBalance.toFixed(4), usdc: usdcBalance.toFixed(2) };
+      } else throw new Error("No positions");
+    } catch(e) { return { error: e.message }; }
+  }
+
+  // Portfolio: GoldRush (Covalent)
+  async function getRealPortfolioGoldRush(addr, chainName) {
+    if(!apiKeys.goldrush) return { error: "GoldRush key missing" };
+    const chainId = getChainId(chainName);
+    const url = `https://api.covalenthq.com/v1/${chainId}/address/${addr}/balances_v2/?key=${apiKeys.goldrush}`;
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      if(data.data && data.data.items) {
+        const ethItem = data.data.items.find(i => i.contract_ticker_symbol === "ETH");
+        const usdcItem = data.data.items.find(i => i.contract_ticker_symbol === "USDC");
+        const eth = ethItem ? (ethItem.balance / 1e18).toFixed(4) : "0";
+        const usdc = usdcItem ? (usdcItem.balance / 1e6).toFixed(2) : "0";
+        return { eth, usdc };
+      }
+      return { error: "No balances" };
+    } catch(e) { return { error: e.message }; }
+  }
+
+  async function getRealPortfolio(addr, chainName) {
+    let res = await getRealPortfolioZerion(addr, chainName);
+    if(!res.error) return res;
+    console.log("Zerion failed, fallback to GoldRush:", res.error);
+    let res2 = await getRealPortfolioGoldRush(addr, chainName);
+    if(!res2.error) return res2;
+    return { error: `Both APIs failed. Zerion: ${res.error}. GoldRush: ${res2.error}` };
+  }
+
+  // ---------- RENDER ALL MODULES ----------
+  async function refreshAll() {
+    const addr = currentInput;
+    const chain = currentChain;
+
+    // Scam
+    const scam = await getTokenScamData(addr, chain);
+    document.getElementById("scamTab").innerHTML = scam.error ? `<div class="glass-panel p-6 text-red-400">❌ ${scam.error}</div>` :
+      `<div class="glass-panel p-6"><h2 class="text-2xl font-bold"><i class="fas fa-shield-alt text-red-400 mr-2"></i>Scam Token Detection</h2><div class="flex justify-between"><span class="px-4 py-1 rounded-full ${scam.risk>70?'bg-red-600':scam.risk>40?'bg-orange-500':'bg-green-600'}">Risk ${scam.risk}%</span><span>🌐 GoPlus</span></div><div class="mt-3">${scam.flags.map(f=>`<span class="inline-block bg-red-900/40 px-2 py-0.5 rounded-full text-xs mr-1">${f}</span>`).join('')}</div></div>`;
+
+    // Trading Strategy (market data for the address – if it's a token)
+    const market = await getTokenMarketData(addr);
+    document.getElementById("strategyTab").innerHTML = market.error ? `<div class="glass-panel p-6 text-red-400">❌ ${market.error}</div>` :
+      `<div class="glass-panel p-6"><h2 class="text-2xl font-bold"><i class="fas fa-chart-line text-cyan-400 mr-2"></i>Token Market Data</h2><div class="grid grid-cols-2 gap-3"><div class="metric-card"><p class="text-xs">Price</p><div class="stat-value">$${market.price}</div></div><div class="metric-card"><p class="text-xs">Liquidity</p><div class="stat-value">${market.liquidity}</div></div><div class="metric-card"><p class="text-xs">24h Volume</p><div class="stat-value">${market.volume24h}</div></div><div class="metric-card"><p class="text-xs">DEX / Chain</p><div class="stat-value">${market.dex} (${market.chain})</div></div></div></div>`;
+
+    // Yield
+    const pools = await fetchRealYield("USDC", chain);
+    document.getElementById("yieldTab").innerHTML = pools.error ? `<div class="glass-panel p-6 text-red-400">❌ ${pools.error}</div>` :
+      `<div class="glass-panel p-6"><h2 class="text-2xl font-bold"><i class="fas fa-water text-emerald-400 mr-2"></i>Yield Optimizer (DeFiLlama)</h2><div class="grid gap-2">${pools.map(p=>`<div class="metric-card flex justify-between"><div><span class="font-bold">${p.protocol}</span><span class="text-xs ml-2">${p.pool}</span></div><div><span class="text-green-300">${p.apy.toFixed(2)}%</span><span class="text-xs ml-2">${p.risk}</span></div></div>`).join('')}</div></div>`;
+
+    // Identity + Reputation
+    const ident = await getIdentity(addr);
+    const rep = await getReputationScore(addr, chain);
+    document.getElementById("identityTab").innerHTML = `<div class="glass-panel p-6"><h2 class="text-2xl font-bold"><i class="fas fa-id-card text-purple-400 mr-2"></i>Social Identity</h2><div class="flex flex-col items-center"><div class="reputation-nft bg-gradient-to-br from-${rep.grade==='Gold'?'yellow-400':'gray-400'} to-${rep.grade==='Gold'?'orange-500':'gray-600'}"><i class="fas fa-crown"></i></div><p class="mt-2">${rep.grade} Reputation (Score ${rep.score})</p></div><div class="mt-3 text-center">ENS: ${ident.ens || '—'}</div></div>`;
+
+    // AI Agents
+    const agents = await getCoinGeckoPriceChanges();
+    document.getElementById("agentsTab").innerHTML = agents.error ? `<div class="glass-panel p-6 text-red-400">❌ ${agents.error}</div>` :
+      `<div class="glass-panel p-6"><h2 class="text-2xl font-bold"><i class="fas fa-robot text-green-400 mr-2"></i>AI Trading Agents (CoinGecko)</h2><div class="grid grid-cols-2 gap-2">${agents.map(s=>`<div class="metric-card flex justify-between"><span>${s.token}</span><span class="${s.signal==='BUY'?'text-green-400':s.signal==='SELL'?'text-red-400':'text-yellow-400'}">${s.signal}</span><span class="text-xs">24h Δ${s.change}%</span></div>`).join('')}</div></div>`;
+
+    // Prediction Markets
+    const preds = await getRealPredictionEvents();
+    document.getElementById("predictionTab").innerHTML = preds.error ? `<div class="glass-panel p-6 text-red-400">❌ ${preds.error}</div>` :
+      `<div class="glass-panel p-6"><h2 class="text-2xl font-bold"><i class="fas fa-chart-gantt text-yellow-300 mr-2"></i>Prediction Markets (Polymarket)</h2>${preds.map(p=>`<div class="metric-card mb-2"><div class="flex justify-between"><span>${p.name}</span><span class="text-cyan-300">${p.prob.toFixed(0)}%</span></div><div class="prob-bar mt-1"><div class="prob-fill" style="width:${p.prob}%"></div></div><div class="text-xs">Volume: ${p.volume}</div></div>`).join('')}</div>`;
+
+    // Portfolio (real)
+    const portfolio = await getRealPortfolio(addr, chain);
+    document.getElementById("portfolioTab").innerHTML = portfolio.error ? `<div class="glass-panel p-6 text-red-400">❌ ${portfolio.error}<br><span class="text-xs">Check console. Make sure API keys are correct and wallet has activity.</span></div>` :
+      `<div class="glass-panel p-6"><h2 class="text-2xl font-bold"><i class="fas fa-chart-pie text-emerald-400 mr-2"></i>Adaptive Portfolio (Zerion/GoldRush)</h2><div class="metric-card">ETH: ${portfolio.eth} ETH</div><div class="metric-card mt-2">USDC: $${portfolio.usdc}</div><div class="text-xs text-slate-400 mt-2">Real balances from your connected wallet or entered address.</div></div>`;
+
+    // Cross-Chain & Gas (placeholder – can be extended)
+    document.getElementById("crossTab").innerHTML = `<div class="glass-panel p-6"><h2 class="text-2xl font-bold"><i class="fas fa-exchange-alt text-blue-300 mr-2"></i>Cross‑Chain Execution & Gas</h2><div class="metric-card">⛽ Gas data requires Etherscan API key (optional).</div><div class="mt-2 text-yellow-300">1inch API integration coming soon for live quotes.</div><div class="mt-2"><button id="simulateSwapBtn" class="bg-indigo-700 px-3 py-1 rounded text-sm">Simulate USDC → ETH (mock)</button><div id="swapResult" class="text-xs mt-1"></div></div></div>`;
+    document.getElementById("simulateSwapBtn")?.addEventListener("click", () => document.getElementById("swapResult").innerHTML = "✅ Swap simulated (mock) – connect Circle Wallet for real execution.");
+
+    // Macro
+    const fg = await getRealFearGreed();
+    document.getElementById("macroTab").innerHTML = fg.error ? `<div class="glass-panel p-6 text-red-400">❌ ${fg.error}</div>` :
+      `<div class="glass-panel p-6"><h2 class="text-2xl font-bold"><i class="fas fa-globe-americas text-cyan-300 mr-2"></i>Macro & Geopolitical</h2><div class="metric-card"><span class="text-slate-300">Fear & Greed Index:</span> <span class="text-xl font-bold">${fg.fng}/100</span> (${fg.classification})<div class="prob-bar mt-1"><div class="prob-fill" style="width:${fg.fng}%"></div></div></div></div>`;
+
+    // Social Trading (placeholder)
+    document.getElementById("socialTab").innerHTML = `<div class="glass-panel p-6"><h2 class="text-2xl font-bold"><i class="fas fa-users text-pink-400 mr-2"></i>Social Trading</h2><div class="text-yellow-300">Leaderboard and copy-trading require on-chain data aggregation. Coming soon with Covalent API.</div></div>`;
+  }
+
+  async function fullAnalysis() {
+    let val = document.getElementById("walletInput").value.trim();
+    if(!val) { alert("Enter a wallet or token address"); return; }
+    currentInput = val;
+    currentChain = document.getElementById("chainSelect").value;
+    await refreshAll();
+  }
+
+  // Event listeners
+  window.onload = () => {
+    loadKeys();
+    document.getElementById("walletConnectBtn").onclick = connectWallet;
+    document.getElementById("analyzeBtn").onclick = fullAnalysis;
+    document.getElementById("copyBtn").onclick = () => { navigator.clipboard.writeText(currentInput); alert("Copied"); };
+    document.getElementById("exportBtn").onclick = () => { let blob = new Blob([JSON.stringify({ input:currentInput, timestamp:new Date() })], {type:"application/json"}); let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download="omniwallet_report.json"; a.click(); };
+    document.getElementById("settingsBtn").onclick = () => document.getElementById("apiModal").classList.remove("hidden");
+    document.getElementById("closeModalBtn").onclick = () => document.getElementById("apiModal").classList.add("hidden");
+    document.getElementById("saveKeysBtn").onclick = saveKeys;
+    document.getElementById("darkToggle").onclick = () => document.body.classList.toggle("light");
+    document.querySelectorAll(".demo-wallet").forEach(el => el.addEventListener("click", () => { document.getElementById("walletInput").value = el.getAttribute("data-addr"); fullAnalysis(); }));
+    document.querySelectorAll(".nav-item").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".nav-item").forEach(t=>t.classList.remove("active"));
+        tab.classList.add("active");
+        let id = tab.getAttribute("data-tab");
+        document.querySelectorAll(".module").forEach(m=>m.classList.remove("active-module"));
+        document.getElementById(`${id}Tab`).classList.add("active-module");
+      });
+    });
+    document.getElementById("walletInput").value = currentInput;
+    fullAnalysis();
+  };
+</script>
+</body>
+</html>
