@@ -1,8 +1,12 @@
 const CIRCLE_CAPABILITIES = [
   'Wallets',
+  'App Kit',
+  'Swap Kit',
   'CCTP',
+  'Gateway',
   'Nanopayments',
-  'USDC settlement'
+  'Paymaster',
+  'USDC settlement on Arc'
 ];
 
 function getCircleBaseUrl(environment) {
@@ -34,6 +38,7 @@ export default async function handler(req, res) {
   }
 
   const apiKey = process.env.CIRCLE_API_KEY || process.env.CIRCLE_API_KEY_SANDBOX;
+  const kitKey = process.env.CIRCLE_KIT_KEY || process.env.CIRCLE_APP_KIT_KEY;
   const environment = process.env.CIRCLE_ENV === 'production' ? 'production' : 'sandbox';
   const baseUrl = getCircleBaseUrl(environment);
 
@@ -42,6 +47,10 @@ export default async function handler(req, res) {
       configured: false,
       connected: false,
       environment,
+      appKit: {
+        configured: Boolean(kitKey),
+        products: ['App Kit', 'Swap Kit']
+      },
       status: 'missing_key',
       capabilities: CIRCLE_CAPABILITIES,
       message: 'Set CIRCLE_API_KEY in the deployment environment to enable Circle-backed settlement verification.'
@@ -64,6 +73,10 @@ export default async function handler(req, res) {
         configured: true,
         connected: false,
         environment,
+        appKit: {
+          configured: Boolean(kitKey),
+          products: ['App Kit', 'Swap Kit']
+        },
         status: 'circle_configuration_failed',
         httpStatus: upstream.status,
         capabilities: CIRCLE_CAPABILITIES,
@@ -77,6 +90,10 @@ export default async function handler(req, res) {
       configured: true,
       connected: true,
       environment,
+      appKit: {
+        configured: Boolean(kitKey),
+        products: ['App Kit', 'Swap Kit']
+      },
       status: 'connected',
       masterWalletId: maskIdentifier(masterWalletId),
       capabilities: CIRCLE_CAPABILITIES,
@@ -87,6 +104,10 @@ export default async function handler(req, res) {
       configured: true,
       connected: false,
       environment,
+      appKit: {
+        configured: Boolean(kitKey),
+        products: ['App Kit', 'Swap Kit']
+      },
       status: 'circle_unreachable',
       capabilities: CIRCLE_CAPABILITIES,
       message: error.message || 'Unable to reach Circle configuration API.'

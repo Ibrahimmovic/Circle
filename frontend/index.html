@@ -391,8 +391,8 @@
             </select>
           </label>
           <label class="block">
-            <span class="mb-2 block text-sm font-bold text-slate-300">Wallet / account label</span>
-            <input id="walletInput" class="input" value="agora-agent.circle.wallet" aria-label="Wallet label">
+            <span class="mb-2 block text-sm font-bold text-slate-300">Wallet address</span>
+            <input id="walletInput" class="input" value="0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" aria-label="Wallet address">
           </label>
           <label class="block">
             <span class="mb-2 block text-sm font-bold text-slate-300">Target asset</span>
@@ -417,6 +417,13 @@
             </span>
             <input id="slippageRange" type="range" min="0.1" max="2" step="0.05" value="0.65" class="slider">
           </label>
+          <div class="sm:col-span-2 flex flex-col gap-3 rounded-3xl border border-cyan-300/10 bg-cyan-300/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h4 class="font-black">Live data mode</h4>
+              <p id="dataSourceStatus" class="text-sm text-slate-400">Loads Zerion + GoldRush portfolio data through backend API routes.</p>
+            </div>
+            <button id="loadPortfolioBtn" class="btn-primary !px-4 !py-2 text-sm"><i class="fa-solid fa-wallet"></i> Load live portfolio</button>
+          </div>
         </div>
       </div>
 
@@ -464,7 +471,8 @@
           <label>
             <span class="mb-2 block text-xs font-bold uppercase tracking-[0.18em] text-slate-500">To</span>
             <select id="destMarket" class="select">
-              <option selected>Ethereum</option>
+              <option selected>Arc</option>
+              <option>Ethereum</option>
               <option>Base</option>
               <option>Arbitrum</option>
               <option>Solana</option>
@@ -487,7 +495,7 @@
           <span>Venue / route</span>
           <span>Net price</span>
           <span>Cost</span>
-          <span>ETA</span>
+          <span>Primitive</span>
         </div>
         <div id="routeRows" class="space-y-3"></div>
       </div>
@@ -554,13 +562,14 @@
   </main>
 
   <script>
-    const portfolioValue = 128430;
+    let portfolioValue = 128430;
     const assets = [
       { symbol: "BTC", name: "Bitcoin", current: 26, base: { conservative: 28, balanced: 28, aggressive: 26 }, price: 68200, change: 2.6, volatility: 38, liquidity: 96, color: "#f59e0b" },
       { symbol: "ETH", name: "Ethereum", current: 30, base: { conservative: 22, balanced: 27, aggressive: 29 }, price: 3740, change: 4.1, volatility: 46, liquidity: 94, color: "#67e8f9" },
       { symbol: "SOL", name: "Solana", current: 14, base: { conservative: 5, balanced: 12, aggressive: 23 }, price: 164, change: 7.4, volatility: 72, liquidity: 82, color: "#a78bfa" },
       { symbol: "LINK", name: "Chainlink", current: 6, base: { conservative: 5, balanced: 8, aggressive: 10 }, price: 17.8, change: 1.2, volatility: 58, liquidity: 74, color: "#60a5fa" },
-      { symbol: "USDC", name: "Circle USDC", current: 24, base: { conservative: 40, balanced: 25, aggressive: 12 }, price: 1, change: 0, volatility: 2, liquidity: 99, color: "#34d399" }
+      { symbol: "USDC", name: "Circle USDC", current: 24, base: { conservative: 40, balanced: 25, aggressive: 12 }, price: 1, change: 0, volatility: 2, liquidity: 99, color: "#34d399" },
+      { symbol: "OTHER", name: "Other assets", current: 0, base: { conservative: 0, balanced: 0, aggressive: 0 }, price: 1, change: 0, volatility: 52, liquidity: 50, color: "#94a3b8" }
     ];
 
     const signals = [
@@ -583,6 +592,7 @@
 
     const formatUsd = (value) => value.toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 });
     const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+    const chainApiName = (chain) => String(chain || "ethereum").toLowerCase().replace(" ", "-");
 
     function log(message, tone = "info") {
       const logEl = document.getElementById("agentLog");
@@ -593,19 +603,61 @@
       logEl.prepend(line);
     }
 
+    function updateDataSourceStatus(message, tone = "text-slate-400") {
+      const status = document.getElementById("dataSourceStatus");
+      if (status) status.className = `text-sm ${tone}`;
+      if (status) status.textContent = message;
+    }
+
+    function updatePortfolioFromTokens(tokens = [], totalValue = portfolioValue) {
+      const tokenMap = new Map(tokens.map((token) => [String(token.symbol || "").toUpperCase(), token]));
+      const knownSymbols = new Set(assets.filter((asset) => asset.symbol !== "OTHER").map((asset) => asset.symbol));
+      const knownValue = assets.reduce((sum, asset) => {
+        if (asset.symbol === "OTHER") return sum;
+        const token = tokenMap.get(asset.symbol);
+        const value = Number(token?.value || 0);
+        if (value > 0) {
+          asset.current = totalValue > 0 ? (value / totalValue) * 100 : asset.current;
+          asset.price = Number(token.price || asset.price);
+        } else if (tokens.length) {
+          asset.current = 0;
+        }
+        return sum + value;
+      }, 0);
+
+      const otherValue = tokens
+        .filter((token) => !knownSymbols.has(String(token.symbol || "").toUpperCase()))
+        .reduce((sum, token) => sum + Number(token.value || 0), 0);
+      const other = assets.find((asset) => asset.symbol === "OTHER");
+      other.current = totalValue > 0 ? (otherValue / totalValue) * 100 : 0;
+
+      // Normalize any rounding residue so the chart stays visually honest.
+      const currentTotal = assets.reduce((sum, asset) => sum + asset.current, 0);
+      if (currentTotal > 0) {
+        assets.forEach((asset) => {
+          asset.current = (asset.current / currentTotal) * 100;
+        });
+      }
+
+      portfolioValue = totalValue || portfolioValue;
+      document.getElementById("aumMetric").textContent = formatUsd(portfolioValue);
+      renderAllocation();
+    }
+
     function computeTargets() {
       const risk = document.getElementById("riskSelect").value;
       const stableMin = Number(document.getElementById("stableBuffer").value);
       const targetAsset = document.getElementById("targetAsset").value;
       const raw = assets.map((asset) => {
         let target = asset.base[risk];
-        if (asset.symbol !== "USDC") {
+        if (asset.symbol !== "USDC" && asset.symbol !== "OTHER") {
           const momentumBoost = asset.change * 0.33;
           const volatilityPenalty = (asset.volatility - 45) * 0.035;
           target += momentumBoost - volatilityPenalty;
           if (asset.symbol === targetAsset) target += risk === "aggressive" ? 4 : 2;
         }
-        return { ...asset, target: clamp(target, asset.symbol === "USDC" ? stableMin : 2, 55) };
+        const minimumTarget = asset.symbol === "USDC" ? stableMin : asset.symbol === "OTHER" ? 0 : 2;
+        return { ...asset, target: clamp(target, minimumTarget, 55) };
       });
 
       const usdc = raw.find((asset) => asset.symbol === "USDC");
@@ -729,7 +781,44 @@
       `).join("");
     }
 
-    function rankRoutes() {
+    function renderRoutes(routes, amount, settlement, target) {
+      document.getElementById("routeRows").innerHTML = routes.map((route, index) => {
+        const selected = index === 0;
+        const allowed = route.allowed !== undefined ? route.allowed : route.slippage <= Number(document.getElementById("slippageRange").value);
+        const slippage = route.estimatedSlippageBps !== undefined ? route.estimatedSlippageBps / 100 : route.slippage;
+        const cost = route.estimatedCostUsd !== undefined ? route.estimatedCostUsd : route.cost;
+        const primitive = route.circlePrimitive || route.primitive || `${route.eta?.toFixed?.(1) || "1.0"} min`;
+        const price = route.price || ((assets.find((item) => item.symbol === target) || assets[1]).price * (1 + slippage / 100));
+        const badgeTone = selected && allowed ? "text-emerald-300" : allowed ? "text-cyan-300" : "text-amber-300";
+
+        return `
+          <div class="route-row ${selected ? "border-emerald-300/40 bg-emerald-400/5" : ""}">
+            <div>
+              <div class="flex flex-wrap items-center gap-2 font-black">
+                <i class="fa-solid ${route.icon || "fa-route"} ${badgeTone}"></i>
+                ${route.name}
+                ${selected ? '<span class="pill !py-1 text-[0.65rem]"><i class="fa-solid fa-crown text-amber-300"></i> Best</span>' : ""}
+              </div>
+              <p class="text-xs text-slate-500">${route.source || document.getElementById("sourceMarket").value} -> ${route.chain}${route.chain === "Off-chain" ? "" : ` -> ${route.destination || document.getElementById("destMarket").value}`} via ${settlement}</p>
+            </div>
+            <div>
+              <p class="font-extrabold">${formatUsd(price)}</p>
+              <p class="text-xs text-slate-500">${slippage.toFixed(2)}% expected slippage</p>
+            </div>
+            <div>
+              <p class="font-extrabold ${allowed ? "text-emerald-300" : "text-amber-300"}">${formatUsd(cost)}</p>
+              <p class="text-xs text-slate-500">fee + price impact</p>
+            </div>
+            <div>
+              <p class="font-extrabold">${primitive}</p>
+              <p class="text-xs text-slate-500">${route.latencyMs ? `${route.latencyMs}ms ETA` : "settlement rail"}</p>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    async function rankRoutes() {
       const source = document.getElementById("sourceMarket").value;
       const destination = document.getElementById("destMarket").value;
       const amount = Number(document.getElementById("orderAmount").value || 0);
@@ -737,6 +826,29 @@
       const target = document.getElementById("targetAsset").value;
       const asset = assets.find((item) => item.symbol === target) || assets[1];
       const settlement = document.getElementById("settlementAsset").value;
+
+      try {
+        const url = new URL("/api/execution-plan", window.location.origin);
+        url.searchParams.set("source", source);
+        url.searchParams.set("destination", destination);
+        url.searchParams.set("amount", amount);
+        url.searchParams.set("settlementAsset", settlement);
+        url.searchParams.set("maxSlippageBps", Math.round(maxSlippage * 100));
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const plan = await response.json();
+        const routes = plan.routes.map((route) => ({
+          ...route,
+          price: asset.price * (1 + (route.estimatedSlippageBps / 10000)),
+          icon: route.chain === "Arc" ? "fa-circle-nodes" : route.type === "bridge" ? "fa-bridge" : route.type === "dex" ? "fa-layer-group" : "fa-building-columns"
+        }));
+        renderRoutes(routes, amount, settlement, target);
+        const best = routes[0];
+        log(`Arc-aware route ranked: ${best.name} (${best.circlePrimitive}) selected for ${formatUsd(amount)} ${settlement}->${target}.`, best.allowed ? "good" : "warn");
+        return routes;
+      } catch (error) {
+        log(`Backend execution planner unavailable; using local simulator. ${error.message}`, "warn");
+      }
 
       const routes = venues.map((venue) => {
         const sameChainBonus = venue.chain === destination ? 0.18 : 0;
@@ -749,35 +861,7 @@
         return { ...venue, slippage, price, cost, eta, score };
       }).sort((a, b) => b.score - a.score);
 
-      document.getElementById("routeRows").innerHTML = routes.map((route, index) => {
-        const selected = index === 0;
-        const allowed = route.slippage <= maxSlippage;
-        const badgeTone = selected && allowed ? "text-emerald-300" : allowed ? "text-cyan-300" : "text-amber-300";
-        return `
-          <div class="route-row ${selected ? "border-emerald-300/40 bg-emerald-400/5" : ""}">
-            <div>
-              <div class="flex flex-wrap items-center gap-2 font-black">
-                <i class="fa-solid ${route.icon} ${badgeTone}"></i>
-                ${route.name}
-                ${selected ? '<span class="pill !py-1 text-[0.65rem]"><i class="fa-solid fa-crown text-amber-300"></i> Best</span>' : ""}
-              </div>
-              <p class="text-xs text-slate-500">${source} -> ${route.chain}${route.chain === "Off-chain" ? "" : ` -> ${destination}`} via ${settlement}</p>
-            </div>
-            <div>
-              <p class="font-extrabold">${formatUsd(route.price)}</p>
-              <p class="text-xs text-slate-500">${route.slippage.toFixed(2)}% expected slippage</p>
-            </div>
-            <div>
-              <p class="font-extrabold ${allowed ? "text-emerald-300" : "text-amber-300"}">${formatUsd(route.cost)}</p>
-              <p class="text-xs text-slate-500">fee + price impact</p>
-            </div>
-            <div>
-              <p class="font-extrabold">${route.eta.toFixed(1)} min</p>
-              <p class="text-xs text-slate-500">settlement ETA</p>
-            </div>
-          </div>
-        `;
-      }).join("");
+      renderRoutes(routes.map((route) => ({ ...route, allowed: route.slippage <= maxSlippage })), amount, settlement, target);
 
       const best = routes[0];
       log(`Route ranked: ${best.name} on ${best.chain} selected for ${formatUsd(amount)} ${settlement}->${target}; expected cost ${formatUsd(best.cost)}.`, best.slippage <= maxSlippage ? "good" : "warn");
@@ -794,7 +878,7 @@
 
         if (data.connected) {
           pill.innerHTML = `<span class="status-dot good"></span> Circle API connected (${data.environment})`;
-          message.textContent = `Circle API key is active on ${data.environment}. Master wallet ${data.masterWalletId || "configured"} is available for USDC settlement simulations.`;
+          message.textContent = `Circle API key is active on ${data.environment}. Master wallet ${data.masterWalletId || "configured"} is available; App/Swap Kit ${data.appKit?.configured ? "key is configured" : "key still needs env setup"}.`;
           log("Circle configuration verified through backend /v1/configuration.", "good");
         } else if (data.configured) {
           pill.innerHTML = `<span class="status-dot warn"></span> Circle key configured`;
@@ -813,24 +897,53 @@
     }
 
     async function refreshMarketData() {
-      log("Refreshing public CoinGecko market data for BTC, ETH, SOL, LINK.", "info");
+      log("Refreshing market signals through backend CoinGecko, DefiLlama, and Fear & Greed integrations.", "info");
       try {
-        const ids = "bitcoin,ethereum,solana,chainlink";
-        const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`);
+        const response = await fetch("/api/market-signals");
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
-        const map = { BTC: "bitcoin", ETH: "ethereum", SOL: "solana", LINK: "chainlink" };
+        const priceMap = new Map((data.prices || []).map((item) => [item.symbol, item]));
         assets.forEach((asset) => {
-          const id = map[asset.symbol];
-          if (!id || !data[id]) return;
-          asset.price = data[id].usd || asset.price;
-          asset.change = data[id].usd_24h_change || asset.change;
+          const live = priceMap.get(asset.symbol);
+          if (!live) return;
+          asset.price = Number(live.price || asset.price);
+          asset.change = Number(live.change24h || asset.change);
         });
+        signals[0].detail = `${data.sources?.prices || "Market"} prices are live. ${data.sources?.yields || "Yield"} found ${data.yields?.length || 0} USDC pools.`;
+        signals[1].value = data.fearGreed?.classification || signals[1].value;
+        signals[1].detail = `Fear & Greed index is ${data.fearGreed?.value || "n/a"}/100; agent adjusts beta and USDC buffer from this regime signal.`;
+        signals[2].detail = `Top USDC yield rail: ${data.yields?.[0]?.protocol || "USDC"} on ${data.yields?.[0]?.chain || "Arc/Circle"} at ${Number(data.yields?.[0]?.apy || 0).toFixed(2)}% APY.`;
+        renderSignals();
         renderAllocation();
         rankRoutes();
-        log("Market data refreshed and adaptive weights recalculated.", "good");
+        log("Market intelligence refreshed and adaptive weights recalculated.", "good");
       } catch (error) {
         log(`Market refresh failed, using embedded fallback data: ${error.message}`, "warn");
+      }
+    }
+
+    async function loadLivePortfolio() {
+      const address = document.getElementById("walletInput").value.trim();
+      const chain = chainApiName(document.getElementById("chainSelect").value);
+      updateDataSourceStatus("Loading server-side Zerion + GoldRush portfolio...", "text-cyan-300");
+      log(`Requesting live portfolio for ${address.slice(0, 6)}...${address.slice(-4)} on ${chain}.`, "info");
+
+      try {
+        const url = new URL("/api/portfolio", window.location.origin);
+        url.searchParams.set("address", address);
+        url.searchParams.set("chain", chain);
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        updatePortfolioFromTokens(data.tokens, Number(data.totalValue || portfolioValue));
+        const sourceSummary = Object.entries(data.dataSources || {})
+          .map(([name, source]) => `${name}: ${source.status}`)
+          .join(" | ");
+        updateDataSourceStatus(`${data.mode === "live" ? "Live" : "Demo"} portfolio loaded. ${sourceSummary}`, data.mode === "live" ? "text-emerald-300" : "text-amber-300");
+        log(data.message || "Portfolio data loaded.", data.mode === "live" ? "good" : "warn");
+      } catch (error) {
+        updateDataSourceStatus("Portfolio API unavailable; using built-in demo allocation.", "text-amber-300");
+        log(`Portfolio load failed: ${error.message}`, "bad");
       }
     }
 
@@ -842,8 +955,8 @@
       log(`Adaptive rebalance generated for ${document.getElementById("riskSelect").value} profile: ${orders.join(" | ")}.`, "good");
     }
 
-    function simulateExecution() {
-      const routes = rankRoutes();
+    async function simulateExecution() {
+      const routes = await rankRoutes();
       const best = routes[0];
       const settlement = document.getElementById("settlementAsset").value;
       const source = document.getElementById("sourceMarket").value;
@@ -870,6 +983,7 @@
       document.getElementById("executeBtn").addEventListener("click", simulateExecution);
       document.getElementById("routeBtn").addEventListener("click", rankRoutes);
       document.getElementById("scanMarketsBtn").addEventListener("click", refreshMarketData);
+      document.getElementById("loadPortfolioBtn").addEventListener("click", loadLivePortfolio);
       document.getElementById("clearLogBtn").addEventListener("click", () => {
         document.getElementById("agentLog").innerHTML = "";
         log("Trace cleared. Agent standing by.", "info");
@@ -883,6 +997,8 @@
       rankRoutes();
       log("ArcFlow agent booted with adaptive portfolio and cross-market execution modules.", "good");
       await fetchCircleStatus();
+      await refreshMarketData();
+      await loadLivePortfolio();
     });
   </script>
 </body>
