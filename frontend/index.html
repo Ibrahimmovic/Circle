@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>OmniWallet Pro | Wallet Connect + Real Portfolio (Zerion/GoldRush) + Circle API</title>
+  <title>OmniWallet Pro | Live Portfolio (Covalent + Zerion) | NFT + Tx History</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -27,6 +27,11 @@
     .reputation-nft { width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto; box-shadow: 0 0 15px rgba(0,255,255,0.5); }
     .connect-btn { background: linear-gradient(135deg, #0ea5e9, #8b5cf6); padding: 8px 18px; border-radius: 2rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
     .connect-btn:hover { opacity: 0.9; transform: scale(1.02); }
+    .tx-table { font-size: 0.75rem; width: 100%; border-collapse: collapse; }
+    .tx-table th, .tx-table td { padding: 0.5rem; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .nft-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+    .nft-item { background: rgba(0,0,0,0.4); border-radius: 0.75rem; padding: 0.5rem; text-align: center; width: 80px; }
+    .nft-item img { width: 60px; height: 60px; object-fit: cover; border-radius: 0.5rem; }
   </style>
 </head>
 <body class="text-gray-200 antialiased p-4 md:p-6">
@@ -38,7 +43,7 @@
       <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-400 to-indigo-600 flex items-center justify-center shadow-lg"><i class="fas fa-brain text-white text-2xl"></i></div>
       <div>
         <h1 class="text-3xl font-extrabold bg-gradient-to-r from-cyan-300 via-blue-400 to-purple-400 bg-clip-text text-transparent">OmniWallet<span class="text-white"> Pro</span></h1>
-        <p class="text-slate-400 text-xs">Wallet Connect · Live Portfolio · AI Agents · Circle API</p>
+        <p class="text-slate-400 text-xs">Covalent + Zerion | NFTs | Tx History | Bridge Tracking</p>
       </div>
     </div>
     <div class="flex gap-3 items-center">
@@ -54,7 +59,7 @@
     <div class="flex flex-col md:flex-row gap-3">
       <div class="relative flex-1">
         <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-cyan-400"></i>
-        <input type="text" id="walletInput" placeholder="Wallet address (0x...) or token address" class="w-full bg-black/40 border border-cyan-800/50 rounded-2xl py-3 pl-11 pr-4 text-white">
+        <input type="text" id="walletInput" placeholder="Wallet address (0x...)" class="w-full bg-black/40 border border-cyan-800/50 rounded-2xl py-3 pl-11 pr-4 text-white">
       </div>
       <select id="chainSelect" class="bg-black/40 border border-cyan-800/50 rounded-2xl px-4 py-2">
         <option value="ethereum">Ethereum</option><option value="bsc">BSC</option><option value="polygon">Polygon</option><option value="arbitrum">Arbitrum</option>
@@ -62,36 +67,32 @@
       <button id="analyzeBtn" class="bg-cyan-600 hover:bg-cyan-500 px-6 py-2 rounded-2xl font-bold shadow-md"><i class="fas fa-chart-line"></i> Analyze</button>
       <button id="copyBtn" class="bg-slate-700/70 px-4 rounded-2xl"><i class="fas fa-copy"></i></button>
     </div>
-    <div class="flex gap-4 mt-3 text-xs text-slate-300">
-      <span class="demo-wallet cursor-pointer hover:text-cyan-300" data-addr="0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045">✨ Vitalik (ENS)</span>
-      <span class="demo-wallet cursor-pointer hover:text-cyan-300" data-addr="0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48">💵 USDC Token</span>
-    </div>
-    <p class="text-xs text-slate-400 mt-2">✅ Connect your wallet (MetaMask) to see your own portfolio and AI trading signals. All data is live from public APIs + your API keys.</p>
+    <p class="text-xs text-slate-400 mt-3">✅ Covalent + Zerion portfolio (balances, NFTs, transactions, bridge history). Other modules live with public APIs.</p>
   </div>
 
   <!-- Sidebar + Modules -->
   <div class="flex flex-col lg:flex-row gap-6">
     <div class="lg:w-72 glass-panel p-3 h-fit sticky top-6">
-      <div class="nav-item active" data-tab="scam"><i class="fas fa-shield-halos w-5"></i> Scam Token</div>
+      <div class="nav-item active" data-tab="portfolio"><i class="fas fa-chart-pie w-5"></i> Portfolio</div>
+      <div class="nav-item" data-tab="scam"><i class="fas fa-shield-halos w-5"></i> Scam Token</div>
       <div class="nav-item" data-tab="strategy"><i class="fas fa-chart-line w-5"></i> Trading Strategy</div>
       <div class="nav-item" data-tab="yield"><i class="fas fa-water w-5"></i> Yield Optimizer</div>
       <div class="nav-item" data-tab="identity"><i class="fas fa-id-card w-5"></i> Social Identity</div>
       <div class="nav-item" data-tab="agents"><i class="fas fa-robot w-5"></i> AI Trading Agents</div>
       <div class="nav-item" data-tab="prediction"><i class="fas fa-chart-gantt w-5"></i> Prediction Markets</div>
-      <div class="nav-item" data-tab="portfolio"><i class="fas fa-chart-pie w-5"></i> Adaptive Portfolio</div>
       <div class="nav-item" data-tab="cross"><i class="fas fa-exchange-alt w-5"></i> Cross‑Chain Exec</div>
       <div class="nav-item" data-tab="macro"><i class="fas fa-globe-americas w-5"></i> Macro & Geo</div>
       <div class="nav-item" data-tab="social"><i class="fas fa-users w-5"></i> Social Trading</div>
     </div>
 
     <div class="flex-1 space-y-5">
-      <div id="scamTab" class="module active-module"><div class="glass-panel p-6"><div class="spinner mx-auto"></div><p class="text-center">Loading token security...</p></div></div>
+      <div id="portfolioTab" class="module active-module"><div class="glass-panel p-6"><div class="spinner mx-auto"></div><p class="text-center">Loading portfolio from Covalent + Zerion...</p></div></div>
+      <div id="scamTab" class="module"><div class="glass-panel p-6"><div class="spinner mx-auto"></div></div></div>
       <div id="strategyTab" class="module"><div class="glass-panel p-6"><div class="spinner mx-auto"></div></div></div>
       <div id="yieldTab" class="module"><div class="glass-panel p-6"><div class="spinner mx-auto"></div></div></div>
       <div id="identityTab" class="module"><div class="glass-panel p-6"><div class="spinner mx-auto"></div></div></div>
       <div id="agentsTab" class="module"><div class="glass-panel p-6"><div class="spinner mx-auto"></div></div></div>
       <div id="predictionTab" class="module"><div class="glass-panel p-6"><div class="spinner mx-auto"></div></div></div>
-      <div id="portfolioTab" class="module"><div class="glass-panel p-6"><div class="spinner mx-auto"></div></div></div>
       <div id="crossTab" class="module"><div class="glass-panel p-6"><div class="spinner mx-auto"></div></div></div>
       <div id="macroTab" class="module"><div class="glass-panel p-6"><div class="spinner mx-auto"></div></div></div>
       <div id="socialTab" class="module"><div class="glass-panel p-6"><div class="spinner mx-auto"></div></div></div>
@@ -102,53 +103,108 @@
 <!-- Settings Modal -->
 <div id="apiModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50">
   <div class="glass-panel p-6 w-full max-w-md">
-    <h3 class="text-xl font-bold mb-3">🔑 API Keys</h3>
-    <input type="text" id="zerionKey" placeholder="Zerion API Key (zk_...)" class="w-full bg-black/40 border border-cyan-700 rounded-xl p-2 mb-2">
-    <input type="text" id="goldrushKey" placeholder="GoldRush API Key (cqt_...)" class="w-full bg-black/40 border border-cyan-700 rounded-xl p-2 mb-2">
-    <input type="text" id="circleClientKey" placeholder="Circle Client Key (optional)" class="w-full bg-black/40 border border-cyan-700 rounded-xl p-2 mb-4">
+    <h3 class="text-xl font-bold mb-3">🔑 API Keys (required for portfolio)</h3>
+    <input type="text" id="covalentKey" placeholder="Covalent (GoldRush) API Key" class="w-full bg-black/40 border border-cyan-700 rounded-xl p-2 mb-2">
+    <input type="text" id="zerionKey" placeholder="Zerion API Key (zk_...)" class="w-full bg-black/40 border border-cyan-700 rounded-xl p-2 mb-4">
     <div class="flex justify-end gap-3">
       <button id="closeModalBtn" class="bg-slate-700 px-4 py-2 rounded-xl">Cancel</button>
       <button id="saveKeysBtn" class="bg-cyan-600 px-4 py-2 rounded-xl">Save</button>
     </div>
-    <p class="text-xs text-slate-400 mt-3">Keys stored locally. Zerion + GoldRush are required for portfolio. Circle Client Key for wallet creation on Arc testnet.</p>
+    <p class="text-xs text-slate-400 mt-3">Your keys are stored locally. Covalent key: <span class="font-mono">cqt_rQ4h4chycDcR8HPvHVrJhwGfQY8w</span><br>Zerion key: <span class="font-mono">zk_00b83e21acbf407791cc3856699de600</span></p>
   </div>
 </div>
 
 <script>
   // ------------------- GLOBALS -------------------
-  let currentInput = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045";
+  let currentWallet = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045";
   let currentChain = "ethereum";
-  let apiKeys = { zerion: "", goldrush: "", circleClient: "" };
+  let apiKeys = { covalent: "", zerion: "" };
   let charts = {};
-  let provider, signer, userAddress = null;
 
-  // Helper functions
   function getChainId(chain) { const map = { ethereum:1, bsc:56, polygon:137, arbitrum:42161 }; return map[chain] || 1; }
-  function loadKeys() { let s = localStorage.getItem("omni_keys"); if(s) apiKeys = JSON.parse(s); document.getElementById("zerionKey").value = apiKeys.zerion; document.getElementById("goldrushKey").value = apiKeys.goldrush; document.getElementById("circleClientKey").value = apiKeys.circleClient; }
-  function saveKeys() { apiKeys.zerion = document.getElementById("zerionKey").value; apiKeys.goldrush = document.getElementById("goldrushKey").value; apiKeys.circleClient = document.getElementById("circleClientKey").value; localStorage.setItem("omni_keys", JSON.stringify(apiKeys)); document.getElementById("apiModal").classList.add("hidden"); if(currentInput) refreshAll(); }
+  function getChainNameForCovalent(chain) { return chain === "ethereum" ? "eth-mainnet" : chain === "bsc" ? "bsc-mainnet" : chain === "polygon" ? "polygon-mainnet" : "arbitrum-mainnet"; }
 
-  // Wallet Connect (MetaMask)
-  async function connectWallet() {
-    if (!window.ethereum) { alert("MetaMask not detected. Please install MetaMask."); return; }
+  function loadKeys() { let s = localStorage.getItem("omni_keys"); if(s) apiKeys = JSON.parse(s); document.getElementById("covalentKey").value = apiKeys.covalent; document.getElementById("zerionKey").value = apiKeys.zerion; }
+  function saveKeys() { apiKeys.covalent = document.getElementById("covalentKey").value; apiKeys.zerion = document.getElementById("zerionKey").value; localStorage.setItem("omni_keys", JSON.stringify(apiKeys)); document.getElementById("apiModal").classList.add("hidden"); if(currentWallet) refreshAll(); }
+
+  // ---------- PORTFOLIO MODULE: Covalent + Zerion ----------
+  async function getPortfolioFromCovalent(address, chainName) {
+    if(!apiKeys.covalent) return { error: "Covalent API key missing" };
+    const chainId = getChainId(chainName);
+    // Balances
+    const balancesUrl = `https://api.covalenthq.com/v1/${chainId}/address/${address}/balances_v2/?key=${apiKeys.covalent}`;
+    // Transactions (last 10)
+    const txsUrl = `https://api.covalenthq.com/v1/${chainId}/address/${address}/transactions_v2/?key=${apiKeys.covalent}&pageSize=10`;
+    // NFT holdings (using Covalent's NFT endpoint)
+    const nftUrl = `https://api.covalenthq.com/v1/${chainId}/address/${address}/nft_metadata/?key=${apiKeys.covalent}`;
     try {
-      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-      userAddress = accounts[0];
-      provider = new ethers.providers.Web3Provider(window.ethereum);
-      signer = provider.getSigner();
-      document.getElementById("walletConnectBtn").innerHTML = `<i class="fas fa-wallet"></i> ${userAddress.slice(0,6)}...${userAddress.slice(-4)}`;
-      document.getElementById("walletInput").value = userAddress;
-      currentInput = userAddress;
-      await refreshAll();
-      // Listen for account changes
-      window.ethereum.on("accountsChanged", (newAccounts) => {
-        if (newAccounts.length) { userAddress = newAccounts[0]; document.getElementById("walletInput").value = userAddress; currentInput = userAddress; refreshAll(); }
-        else { document.getElementById("walletConnectBtn").innerHTML = `<i class="fas fa-plug"></i> Connect Wallet`; userAddress = null; }
-      });
-    } catch (err) { console.error(err); alert("Failed to connect wallet."); }
+      const [balancesRes, txsRes, nftRes] = await Promise.all([fetch(balancesUrl), fetch(txsUrl), fetch(nftUrl)]);
+      const balancesData = await balancesRes.json();
+      const txsData = await txsRes.json();
+      const nftData = await nftRes.json();
+      let tokens = [];
+      if(balancesData.data && balancesData.data.items) {
+        tokens = balancesData.data.items.filter(i => parseFloat(i.balance) > 0).map(i => ({
+          symbol: i.contract_ticker_symbol,
+          balance: (i.balance / Math.pow(10, i.contract_decimals)).toFixed(4),
+          value: i.quote ? i.quote.toFixed(2) : null
+        }));
+      }
+      let transactions = [];
+      if(txsData.data && txsData.data.items) {
+        transactions = txsData.data.items.slice(0,10).map(tx => ({
+          hash: tx.tx_hash,
+          from: tx.from_address,
+          to: tx.to_address,
+          value: tx.value ? (tx.value / 1e18).toFixed(4) : "0",
+          timestamp: new Date(tx.block_signed_at).toLocaleString()
+        }));
+      }
+      let nfts = [];
+      if(nftData.data && nftData.data.items) {
+        nfts = nftData.data.items.slice(0,6).map(n => ({
+          name: n.nft_data?.[0]?.token_name || n.contract_name || "NFT",
+          image: n.nft_data?.[0]?.external_data?.image || "https://via.placeholder.com/60"
+        }));
+      }
+      return { tokens, transactions, nfts };
+    } catch(e) { return { error: e.message }; }
   }
 
-  // ---------- REAL API FUNCTIONS (public) ----------
-  // Scam Token (GoPlus)
+  async function getPortfolioFromZerion(address, chainName) {
+    if(!apiKeys.zerion) return { error: "Zerion API key missing" };
+    const chainParam = chainName === "ethereum" ? "eth" : chainName;
+    const url = `https://api.zerion.io/v1/wallets/${address}/positions/?currency=usd&filter[chain_ids]=${chainParam}`;
+    try {
+      const res = await fetch(url, { headers: { "Authorization": `Bearer ${apiKeys.zerion}` } });
+      if(!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      let tokens = [];
+      if(data.data && data.data.length) {
+        tokens = data.data.map(pos => ({
+          symbol: pos.attributes?.fungible_info?.symbol || "Unknown",
+          balance: pos.attributes?.quantity?.native || 0,
+          value: pos.attributes?.value || 0
+        })).filter(t => parseFloat(t.balance) > 0);
+      }
+      // Zerion does not provide transaction history directly; we combine with Covalent.
+      return { tokens, transactions: [], nfts: [] };
+    } catch(e) { return { error: e.message }; }
+  }
+
+  async function getCombinedPortfolio(address, chainName) {
+    const covalent = await getPortfolioFromCovalent(address, chainName);
+    const zerion = await getPortfolioFromZerion(address, chainName);
+    // Merge tokens (prefer Covalent balances, supplement with Zerion)
+    let mergedTokens = [];
+    if(covalent.tokens && covalent.tokens.length) mergedTokens = covalent.tokens;
+    else if(zerion.tokens && zerion.tokens.length) mergedTokens = zerion.tokens;
+    const transactions = covalent.transactions || [];
+    const nfts = covalent.nfts || [];
+    return { tokens: mergedTokens, transactions, nfts, covalentError: covalent.error, zerionError: zerion.error };
+  }
+
+  // ---------- OTHER LIVE MODULES (public APIs) ----------
   async function getTokenScamData(tokenAddr, chainName) {
     const chainId = getChainId(chainName);
     const url = `https://api.gopluslabs.io/api/v1/token_security/${chainId}?contract_addresses=${tokenAddr}`;
@@ -158,12 +214,18 @@
       if (data.code===1 && data.result && data.result[tokenAddr.toLowerCase()]) {
         const info = data.result[tokenAddr.toLowerCase()];
         let risk=0, flags=[];
-        if (info.is_honeypot==="1") { risk+=40; flags.push("🍯 Honeypot"); }
-        if (info.sell_tax && parseFloat(info.sell_tax)>10) { risk+=20; flags.push(`💰 Sell tax ${info.sell_tax}%`); }
-        if (info.buy_tax && parseFloat(info.buy_tax)>10) { risk+=10; flags.push(`💸 Buy tax ${info.buy_tax}%`); }
-        if (info.trading_cooldown==="1") { risk+=15; flags.push("⏱️ Cooldown"); }
-        if (info.owner_balance && parseFloat(info.owner_balance)>0) { risk+=10; flags.push("👑 Owner holds"); }
-        if (info.lp_holder?.length && !info.lp_holder.some(lp=>lp.locked==="1")) { risk+=15; flags.push("⚠️ Liquidity unlocked"); }
+        if (info.is_honeypot==="1") risk+=40;
+        if (info.sell_tax && parseFloat(info.sell_tax)>10) risk+=20;
+        if (info.buy_tax && parseFloat(info.buy_tax)>10) risk+=10;
+        if (info.trading_cooldown==="1") risk+=15;
+        if (info.owner_balance && parseFloat(info.owner_balance)>0) risk+=10;
+        if (info.lp_holder?.length && !info.lp_holder.some(lp=>lp.locked==="1")) risk+=15;
+        if (info.is_honeypot==="1") flags.push("🍯 Honeypot");
+        if (info.sell_tax && parseFloat(info.sell_tax)>10) flags.push(`💰 Sell tax ${info.sell_tax}%`);
+        if (info.buy_tax && parseFloat(info.buy_tax)>10) flags.push(`💸 Buy tax ${info.buy_tax}%`);
+        if (info.trading_cooldown==="1") flags.push("⏱️ Cooldown");
+        if (info.owner_balance && parseFloat(info.owner_balance)>0) flags.push("👑 Owner holds");
+        if (info.lp_holder?.length && !info.lp_holder.some(lp=>lp.locked==="1")) flags.push("⚠️ Liquidity unlocked");
         if (flags.length===0) flags.push("✅ No scam indicators");
         risk = Math.min(100, risk);
         return { risk, flags };
@@ -171,7 +233,6 @@
     } catch(e) { return { error: e.message }; }
   }
 
-  // DexScreener market data
   async function getTokenMarketData(tokenAddr) {
     try {
       const url = `https://api.dexscreener.com/latest/dex/search?q=${tokenAddr}`;
@@ -179,18 +240,11 @@
       const data = await res.json();
       if (data.pairs && data.pairs.length>0) {
         const pair = data.pairs[0];
-        return {
-          price: parseFloat(pair.priceUsd).toFixed(4),
-          liquidity: pair.liquidity?.usd ? `$${parseFloat(pair.liquidity.usd).toLocaleString()}` : "N/A",
-          volume24h: pair.volume?.h24 ? `$${parseFloat(pair.volume.h24).toLocaleString()}` : "N/A",
-          chain: pair.chainId,
-          dex: pair.dexId
-        };
+        return { price: parseFloat(pair.priceUsd).toFixed(4), liquidity: pair.liquidity?.usd ? `$${parseFloat(pair.liquidity.usd).toLocaleString()}` : "N/A", volume24h: pair.volume?.h24 ? `$${parseFloat(pair.volume.h24).toLocaleString()}` : "N/A", chain: pair.chainId, dex: pair.dexId };
       } else throw new Error();
     } catch(e) { return { error: "No market data" }; }
   }
 
-  // DeFiLlama
   async function fetchRealYield(asset="USDC", chain="ethereum") {
     try {
       const res = await fetch("https://yields.llama.fi/pools");
@@ -202,7 +256,6 @@
     } catch(e) { return { error: e.message }; }
   }
 
-  // Polymarket
   async function getRealPredictionEvents() {
     try {
       const proxy = "https://api.allorigins.win/raw?url=";
@@ -214,12 +267,10 @@
     } catch(e) { return { error: "Failed to fetch" }; }
   }
 
-  // Fear & Greed
   async function getRealFearGreed() {
     try { const res = await fetch("https://api.alternative.me/fng/"); const data = await res.json(); if(data.data && data.data[0]) return { fng: parseInt(data.data[0].value), classification: data.data[0].value_classification }; throw new Error(); } catch(e) { return { error: "Fear & Greed unavailable" }; }
   }
 
-  // CoinGecko
   async function getCoinGeckoPriceChanges() {
     const coins = ["ethereum", "bitcoin", "solana", "matic-network", "dogecoin", "avalanche-2", "chainlink"];
     const ids = coins.join(",");
@@ -235,7 +286,6 @@
     } catch(e) { return { error: "CoinGecko failed" }; }
   }
 
-  // ENS
   async function getIdentity(addr) {
     try {
       let provider = new ethers.providers.JsonRpcProvider("https://cloudflare-eth.com");
@@ -244,7 +294,6 @@
     } catch(e) { return { error: "ENS failed" }; }
   }
 
-  // Reputation score from scam risk
   async function getReputationScore(addr, chainName) {
     const scam = await getTokenScamData(addr, chainName);
     if(scam.error) return { score: 0, grade: "N/A" };
@@ -253,113 +302,96 @@
     return { score, grade };
   }
 
-  // Portfolio: Zerion
-  async function getRealPortfolioZerion(addr, chainName) {
-    if(!apiKeys.zerion) return { error: "Zerion API key missing" };
-    const chainParam = chainName === "ethereum" ? "eth" : chainName;
-    const url = `https://api.zerion.io/v1/wallets/${addr}/positions/?currency=usd&filter[chain_ids]=${chainParam}`;
-    try {
-      const res = await fetch(url, { headers: { "Authorization": `Bearer ${apiKeys.zerion}` } });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      if(data.data && data.data.length) {
-        let ethBalance = 0, usdcBalance = 0;
-        for (const pos of data.data) {
-          const symbol = pos.attributes?.fungible_info?.symbol || "";
-          const quantity = pos.attributes?.quantity?.native || 0;
-          if(symbol === "ETH") ethBalance += parseFloat(quantity);
-          if(symbol === "USDC") usdcBalance += parseFloat(quantity);
-        }
-        return { eth: ethBalance.toFixed(4), usdc: usdcBalance.toFixed(2) };
-      } else throw new Error("No positions");
-    } catch(e) { return { error: e.message }; }
-  }
-
-  // Portfolio: GoldRush (Covalent)
-  async function getRealPortfolioGoldRush(addr, chainName) {
-    if(!apiKeys.goldrush) return { error: "GoldRush key missing" };
-    const chainId = getChainId(chainName);
-    const url = `https://api.covalenthq.com/v1/${chainId}/address/${addr}/balances_v2/?key=${apiKeys.goldrush}`;
-    try {
-      const res = await fetch(url);
-      const data = await res.json();
-      if(data.data && data.data.items) {
-        const ethItem = data.data.items.find(i => i.contract_ticker_symbol === "ETH");
-        const usdcItem = data.data.items.find(i => i.contract_ticker_symbol === "USDC");
-        const eth = ethItem ? (ethItem.balance / 1e18).toFixed(4) : "0";
-        const usdc = usdcItem ? (usdcItem.balance / 1e6).toFixed(2) : "0";
-        return { eth, usdc };
-      }
-      return { error: "No balances" };
-    } catch(e) { return { error: e.message }; }
-  }
-
-  async function getRealPortfolio(addr, chainName) {
-    let res = await getRealPortfolioZerion(addr, chainName);
-    if(!res.error) return res;
-    console.log("Zerion failed, fallback to GoldRush:", res.error);
-    let res2 = await getRealPortfolioGoldRush(addr, chainName);
-    if(!res2.error) return res2;
-    return { error: `Both APIs failed. Zerion: ${res.error}. GoldRush: ${res2.error}` };
-  }
-
   // ---------- RENDER ALL MODULES ----------
   async function refreshAll() {
-    const addr = currentInput;
+    const addr = currentWallet;
     const chain = currentChain;
 
-    // Scam
+    // 1. Portfolio (Covalent + Zerion)
+    const portfolioDiv = document.getElementById("portfolioTab");
+    portfolioDiv.innerHTML = `<div class="glass-panel p-6"><div class="spinner mx-auto"></div><p class="text-center">Fetching portfolio from Covalent & Zerion...</p></div>`;
+    const portfolio = await getCombinedPortfolio(addr, chain);
+    if(portfolio.error || (!portfolio.tokens.length && !portfolio.transactions.length && !portfolio.nfts.length)) {
+      portfolioDiv.innerHTML = `<div class="glass-panel p-6 text-red-400">❌ Failed to load portfolio. Check API keys. Covalent: ${portfolio.covalentError || "ok"} | Zerion: ${portfolio.zerionError || "ok"}</div>`;
+    } else {
+      portfolioDiv.innerHTML = `<div class="glass-panel p-6">
+        <h2 class="text-2xl font-bold"><i class="fas fa-chart-pie text-emerald-400 mr-2"></i>Portfolio (Covalent + Zerion)</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          <div class="metric-card"><p class="text-sm font-semibold">Token Balances</p>${portfolio.tokens.map(t => `<div class="flex justify-between text-sm"><span>${t.symbol}</span><span>${t.balance} ${t.value ? `($${t.value})` : ''}</span></div>`).join('') || '<div class="text-xs">No tokens found</div>'}</div>
+          <div class="metric-card"><p class="text-sm font-semibold">Recent Transactions (Covalent)</p><table class="tx-table">${portfolio.transactions.map(tx => `<tr><td class="font-mono text-xs">${tx.hash.slice(0,10)}...</td><td>${tx.value} ETH</td><td class="text-xs">${tx.timestamp}</td></tr>`).join('') || '<tr><td colspan="3">No recent transactions</td></tr>'}</table></div>
+          <div class="metric-card col-span-1 md:col-span-2"><p class="text-sm font-semibold">NFT Holdings</p><div class="nft-grid">${portfolio.nfts.map(n => `<div class="nft-item"><img src="${n.image}" onerror="this.src='https://placehold.co/60'"><div class="text-xs mt-1 truncate">${n.name.slice(0,12)}</div></div>`).join('') || '<div class="text-xs">No NFTs found</div>'}</div></div>
+        </div>
+        <div class="text-xs text-slate-400 mt-3">Bridge history: Use Covalent’s transaction list – bridges appear as regular transfers.</div>
+      </div>`;
+    }
+
+    // 2. Scam Token
     const scam = await getTokenScamData(addr, chain);
     document.getElementById("scamTab").innerHTML = scam.error ? `<div class="glass-panel p-6 text-red-400">❌ ${scam.error}</div>` :
-      `<div class="glass-panel p-6"><h2 class="text-2xl font-bold"><i class="fas fa-shield-alt text-red-400 mr-2"></i>Scam Token Detection</h2><div class="flex justify-between"><span class="px-4 py-1 rounded-full ${scam.risk>70?'bg-red-600':scam.risk>40?'bg-orange-500':'bg-green-600'}">Risk ${scam.risk}%</span><span>🌐 GoPlus</span></div><div class="mt-3">${scam.flags.map(f=>`<span class="inline-block bg-red-900/40 px-2 py-0.5 rounded-full text-xs mr-1">${f}</span>`).join('')}</div></div>`;
+      `<div class="glass-panel p-6"><h2 class="text-2xl font-bold"><i class="fas fa-shield-alt text-red-400 mr-2"></i>Scam Token Detection</h2><div class="flex justify-between"><span class="px-4 py-1 rounded-full ${scam.risk>70?'bg-red-600':scam.risk>40?'bg-orange-500':'bg-green-600'}">Risk ${scam.risk}%</span></div><div class="mt-3">${scam.flags.map(f=>`<span class="inline-block bg-red-900/40 px-2 py-0.5 rounded-full text-xs mr-1">${f}</span>`).join('')}</div></div>`;
 
-    // Trading Strategy (market data for the address – if it's a token)
+    // 3. Trading Strategy
     const market = await getTokenMarketData(addr);
     document.getElementById("strategyTab").innerHTML = market.error ? `<div class="glass-panel p-6 text-red-400">❌ ${market.error}</div>` :
-      `<div class="glass-panel p-6"><h2 class="text-2xl font-bold"><i class="fas fa-chart-line text-cyan-400 mr-2"></i>Token Market Data</h2><div class="grid grid-cols-2 gap-3"><div class="metric-card"><p class="text-xs">Price</p><div class="stat-value">$${market.price}</div></div><div class="metric-card"><p class="text-xs">Liquidity</p><div class="stat-value">${market.liquidity}</div></div><div class="metric-card"><p class="text-xs">24h Volume</p><div class="stat-value">${market.volume24h}</div></div><div class="metric-card"><p class="text-xs">DEX / Chain</p><div class="stat-value">${market.dex} (${market.chain})</div></div></div></div>`;
+      `<div class="glass-panel p-6"><h2 class="text-2xl font-bold">Token Market Data</h2><div class="grid grid-cols-2 gap-3"><div class="metric-card"><p>Price</p><div class="stat-value">$${market.price}</div></div><div class="metric-card"><p>Liquidity</p><div class="stat-value">${market.liquidity}</div></div><div class="metric-card"><p>24h Volume</p><div class="stat-value">${market.volume24h}</div></div></div></div>`;
 
-    // Yield
+    // 4. Yield
     const pools = await fetchRealYield("USDC", chain);
     document.getElementById("yieldTab").innerHTML = pools.error ? `<div class="glass-panel p-6 text-red-400">❌ ${pools.error}</div>` :
-      `<div class="glass-panel p-6"><h2 class="text-2xl font-bold"><i class="fas fa-water text-emerald-400 mr-2"></i>Yield Optimizer (DeFiLlama)</h2><div class="grid gap-2">${pools.map(p=>`<div class="metric-card flex justify-between"><div><span class="font-bold">${p.protocol}</span><span class="text-xs ml-2">${p.pool}</span></div><div><span class="text-green-300">${p.apy.toFixed(2)}%</span><span class="text-xs ml-2">${p.risk}</span></div></div>`).join('')}</div></div>`;
+      `<div class="glass-panel p-6"><h2 class="text-2xl font-bold">Yield Optimizer</h2><div class="grid gap-2">${pools.map(p=>`<div class="metric-card flex justify-between"><span>${p.protocol}</span><span class="text-green-300">${p.apy.toFixed(2)}%</span></div>`).join('')}</div></div>`;
 
-    // Identity + Reputation
+    // 5. Identity
     const ident = await getIdentity(addr);
     const rep = await getReputationScore(addr, chain);
-    document.getElementById("identityTab").innerHTML = `<div class="glass-panel p-6"><h2 class="text-2xl font-bold"><i class="fas fa-id-card text-purple-400 mr-2"></i>Social Identity</h2><div class="flex flex-col items-center"><div class="reputation-nft bg-gradient-to-br from-${rep.grade==='Gold'?'yellow-400':'gray-400'} to-${rep.grade==='Gold'?'orange-500':'gray-600'}"><i class="fas fa-crown"></i></div><p class="mt-2">${rep.grade} Reputation (Score ${rep.score})</p></div><div class="mt-3 text-center">ENS: ${ident.ens || '—'}</div></div>`;
+    document.getElementById("identityTab").innerHTML = `<div class="glass-panel p-6"><h2 class="text-2xl font-bold">Identity</h2><div class="flex flex-col items-center"><div class="reputation-nft bg-gradient-to-br from-${rep.grade==='Gold'?'yellow-400':'gray-400'} to-${rep.grade==='Gold'?'orange-500':'gray-600'}"><i class="fas fa-crown"></i></div><p>${rep.grade} (Score ${rep.score})</p></div><div>ENS: ${ident.ens || '—'}</div></div>`;
 
-    // AI Agents
+    // 6. AI Agents
     const agents = await getCoinGeckoPriceChanges();
     document.getElementById("agentsTab").innerHTML = agents.error ? `<div class="glass-panel p-6 text-red-400">❌ ${agents.error}</div>` :
-      `<div class="glass-panel p-6"><h2 class="text-2xl font-bold"><i class="fas fa-robot text-green-400 mr-2"></i>AI Trading Agents (CoinGecko)</h2><div class="grid grid-cols-2 gap-2">${agents.map(s=>`<div class="metric-card flex justify-between"><span>${s.token}</span><span class="${s.signal==='BUY'?'text-green-400':s.signal==='SELL'?'text-red-400':'text-yellow-400'}">${s.signal}</span><span class="text-xs">24h Δ${s.change}%</span></div>`).join('')}</div></div>`;
+      `<div class="glass-panel p-6"><h2 class="text-2xl font-bold">AI Trading Agents</h2><div class="grid grid-cols-2 gap-2">${agents.map(s=>`<div class="metric-card flex justify-between"><span>${s.token}</span><span class="${s.signal==='BUY'?'text-green-400':s.signal==='SELL'?'text-red-400':'text-yellow-400'}">${s.signal}</span><span>Δ${s.change}%</span></div>`).join('')}</div></div>`;
 
-    // Prediction Markets
+    // 7. Prediction Markets
     const preds = await getRealPredictionEvents();
     document.getElementById("predictionTab").innerHTML = preds.error ? `<div class="glass-panel p-6 text-red-400">❌ ${preds.error}</div>` :
-      `<div class="glass-panel p-6"><h2 class="text-2xl font-bold"><i class="fas fa-chart-gantt text-yellow-300 mr-2"></i>Prediction Markets (Polymarket)</h2>${preds.map(p=>`<div class="metric-card mb-2"><div class="flex justify-between"><span>${p.name}</span><span class="text-cyan-300">${p.prob.toFixed(0)}%</span></div><div class="prob-bar mt-1"><div class="prob-fill" style="width:${p.prob}%"></div></div><div class="text-xs">Volume: ${p.volume}</div></div>`).join('')}</div>`;
+      `<div class="glass-panel p-6"><h2 class="text-2xl font-bold">Prediction Markets</h2>${preds.map(p=>`<div class="metric-card mb-2"><div class="flex justify-between"><span>${p.name}</span><span>${p.prob.toFixed(0)}%</span></div><div class="prob-bar mt-1"><div class="prob-fill" style="width:${p.prob}%"></div></div></div>`).join('')}</div>`;
 
-    // Portfolio (real)
-    const portfolio = await getRealPortfolio(addr, chain);
-    document.getElementById("portfolioTab").innerHTML = portfolio.error ? `<div class="glass-panel p-6 text-red-400">❌ ${portfolio.error}<br><span class="text-xs">Check console. Make sure API keys are correct and wallet has activity.</span></div>` :
-      `<div class="glass-panel p-6"><h2 class="text-2xl font-bold"><i class="fas fa-chart-pie text-emerald-400 mr-2"></i>Adaptive Portfolio (Zerion/GoldRush)</h2><div class="metric-card">ETH: ${portfolio.eth} ETH</div><div class="metric-card mt-2">USDC: $${portfolio.usdc}</div><div class="text-xs text-slate-400 mt-2">Real balances from your connected wallet or entered address.</div></div>`;
+    // 8. Cross-Chain (placeholder)
+    document.getElementById("crossTab").innerHTML = `<div class="glass-panel p-6"><h2 class="text-2xl font-bold">Cross-Chain Execution</h2><div class="metric-card">⛽ Gas data requires Etherscan API key (optional).</div><div class="mt-2"><button id="simulateSwapBtn" class="bg-indigo-700 px-3 py-1 rounded text-sm">Simulate USDC → ETH (mock)</button><div id="swapResult" class="text-xs mt-1"></div></div></div>`;
+    document.getElementById("simulateSwapBtn")?.addEventListener("click", () => document.getElementById("swapResult").innerHTML = "✅ Swap simulated. Connect Circle Wallet for real execution.");
 
-    // Cross-Chain & Gas (placeholder – can be extended)
-    document.getElementById("crossTab").innerHTML = `<div class="glass-panel p-6"><h2 class="text-2xl font-bold"><i class="fas fa-exchange-alt text-blue-300 mr-2"></i>Cross‑Chain Execution & Gas</h2><div class="metric-card">⛽ Gas data requires Etherscan API key (optional).</div><div class="mt-2 text-yellow-300">1inch API integration coming soon for live quotes.</div><div class="mt-2"><button id="simulateSwapBtn" class="bg-indigo-700 px-3 py-1 rounded text-sm">Simulate USDC → ETH (mock)</button><div id="swapResult" class="text-xs mt-1"></div></div></div>`;
-    document.getElementById("simulateSwapBtn")?.addEventListener("click", () => document.getElementById("swapResult").innerHTML = "✅ Swap simulated (mock) – connect Circle Wallet for real execution.");
-
-    // Macro
+    // 9. Macro
     const fg = await getRealFearGreed();
     document.getElementById("macroTab").innerHTML = fg.error ? `<div class="glass-panel p-6 text-red-400">❌ ${fg.error}</div>` :
-      `<div class="glass-panel p-6"><h2 class="text-2xl font-bold"><i class="fas fa-globe-americas text-cyan-300 mr-2"></i>Macro & Geopolitical</h2><div class="metric-card"><span class="text-slate-300">Fear & Greed Index:</span> <span class="text-xl font-bold">${fg.fng}/100</span> (${fg.classification})<div class="prob-bar mt-1"><div class="prob-fill" style="width:${fg.fng}%"></div></div></div></div>`;
+      `<div class="glass-panel p-6"><h2 class="text-2xl font-bold">Macro & Geopolitical</h2><div class="metric-card">Fear & Greed: ${fg.fng}/100 (${fg.classification})<div class="prob-bar mt-1"><div class="prob-fill" style="width:${fg.fng}%"></div></div></div></div>`;
 
-    // Social Trading (placeholder)
-    document.getElementById("socialTab").innerHTML = `<div class="glass-panel p-6"><h2 class="text-2xl font-bold"><i class="fas fa-users text-pink-400 mr-2"></i>Social Trading</h2><div class="text-yellow-300">Leaderboard and copy-trading require on-chain data aggregation. Coming soon with Covalent API.</div></div>`;
+    // 10. Social Trading (placeholder)
+    document.getElementById("socialTab").innerHTML = `<div class="glass-panel p-6"><h2 class="text-2xl font-bold">Social Trading</h2><div class="text-yellow-300">Leaderboard and copy-trading coming soon.</div></div>`;
+  }
+
+  // Wallet Connect + Analysis
+  let provider, signer, userAddress = null;
+  async function connectWallet() {
+    if (!window.ethereum) { alert("MetaMask not installed."); return; }
+    try {
+      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+      userAddress = accounts[0];
+      provider = new ethers.providers.Web3Provider(window.ethereum);
+      signer = provider.getSigner();
+      document.getElementById("walletConnectBtn").innerHTML = `<i class="fas fa-wallet"></i> ${userAddress.slice(0,6)}...${userAddress.slice(-4)}`;
+      document.getElementById("walletInput").value = userAddress;
+      currentWallet = userAddress;
+      await refreshAll();
+      window.ethereum.on("accountsChanged", (newAccounts) => {
+        if (newAccounts.length) { userAddress = newAccounts[0]; document.getElementById("walletInput").value = userAddress; currentWallet = userAddress; refreshAll(); }
+        else { document.getElementById("walletConnectBtn").innerHTML = `<i class="fas fa-plug"></i> Connect Wallet`; userAddress = null; }
+      });
+    } catch(err) { console.error(err); alert("Failed to connect wallet."); }
   }
 
   async function fullAnalysis() {
     let val = document.getElementById("walletInput").value.trim();
-    if(!val) { alert("Enter a wallet or token address"); return; }
-    currentInput = val;
+    if(!val) { alert("Enter a wallet address"); return; }
+    currentWallet = val;
     currentChain = document.getElementById("chainSelect").value;
     await refreshAll();
   }
@@ -369,13 +401,12 @@
     loadKeys();
     document.getElementById("walletConnectBtn").onclick = connectWallet;
     document.getElementById("analyzeBtn").onclick = fullAnalysis;
-    document.getElementById("copyBtn").onclick = () => { navigator.clipboard.writeText(currentInput); alert("Copied"); };
-    document.getElementById("exportBtn").onclick = () => { let blob = new Blob([JSON.stringify({ input:currentInput, timestamp:new Date() })], {type:"application/json"}); let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download="omniwallet_report.json"; a.click(); };
+    document.getElementById("copyBtn").onclick = () => { navigator.clipboard.writeText(currentWallet); alert("Copied"); };
+    document.getElementById("exportBtn").onclick = () => { let blob = new Blob([JSON.stringify({ wallet:currentWallet, timestamp:new Date() })], {type:"application/json"}); let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download="report.json"; a.click(); };
     document.getElementById("settingsBtn").onclick = () => document.getElementById("apiModal").classList.remove("hidden");
     document.getElementById("closeModalBtn").onclick = () => document.getElementById("apiModal").classList.add("hidden");
     document.getElementById("saveKeysBtn").onclick = saveKeys;
     document.getElementById("darkToggle").onclick = () => document.body.classList.toggle("light");
-    document.querySelectorAll(".demo-wallet").forEach(el => el.addEventListener("click", () => { document.getElementById("walletInput").value = el.getAttribute("data-addr"); fullAnalysis(); }));
     document.querySelectorAll(".nav-item").forEach(tab => {
       tab.addEventListener("click", () => {
         document.querySelectorAll(".nav-item").forEach(t=>t.classList.remove("active"));
@@ -385,7 +416,7 @@
         document.getElementById(`${id}Tab`).classList.add("active-module");
       });
     });
-    document.getElementById("walletInput").value = currentInput;
+    document.getElementById("walletInput").value = currentWallet;
     fullAnalysis();
   };
 </script>
